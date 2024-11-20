@@ -27,7 +27,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          source venv/bin/activate
+          python3 -m venv pig
+          source pig/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
 
