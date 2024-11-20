@@ -1,0 +1,14 @@
+{
+    "python.pythonPath": "./pig/Scripts/python.exe",
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnSave": true,
+    "python.analysis.extraPaths": [
+        "./"
+    ],
+    "files.exclude": {
+        "**/__pycache__": true,
+        "**/*.pyc": true
+    }
+}
