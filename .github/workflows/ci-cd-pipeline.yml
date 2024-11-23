@@ -62,8 +62,7 @@ jobs:
       - name: Deploy Docker container
         run: |
           ls
-          cat /backend/.env
-          cat .env
+          cat ./backend/.env
           docker run -d --name pig_app -p 8000:8000 --env-file backend/.env pig:latest
 
       # Check Docker container logs
