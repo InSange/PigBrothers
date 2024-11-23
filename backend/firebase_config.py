@@ -10,7 +10,7 @@ firebase_config = {
     "type": os.environ.get("TYPE"),
     "project_id": os.environ.get("PROJECT_ID"),
     "private_key_id": os.environ.get("PRIVATE_KEY_ID"),
-    "private_key": os.environ.get("PRIVATE_KEY"),
+    "private_key": os.environ.get("PRIVATE_KEY").replace("\\n", "\n"),
     "client_email": os.environ.get("CLIENT_EMAIL"),
     "client_id": os.environ.get("CLIENT_ID"),
     "auth_uri": os.environ.get("AUTH_URI"),
