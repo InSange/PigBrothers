@@ -4,7 +4,7 @@ import firebase_admin
 from firebase_admin import credentials, firestore, db
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path="./env")
+load_dotenv(dotenv_path="./.env")
 
 firebase_config = {
     "type": os.environ.get("TYPE"),
