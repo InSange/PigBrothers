@@ -75,7 +75,7 @@ jobs:
           CLIENT_X509_CERT_URL: ${{ secrets.CLIENT_X509_CERT_URL }}
           UNIVERSE_DOMAIN: ${{ secrets.UNIVERSE_DOMAIN }}
         run: |
-          docker run -d --name pig_app -p 8000:8000 \
+          docker run -d -p 8000:8000 \
             -e TYPE=${{ secrets.TYPE }} \
             -e PROJECT_ID=${{ secrets.PROJECT_ID }} \
             -e PRIVATE_KEY_ID=${{ secrets.PRIVATE_KEY_ID }} \
