@@ -37,7 +37,7 @@ jobs:
         run: |
           echo "TYPE=${{ secrets.TYPE }}" >> backend/.env
           echo "PROJECT_ID=${{ secrets.PROJECT_ID }}" >> backend/.env
-          echo "PRIVATE_KEY=${{ secrets.PRIVATE_KEY }}" >> backend/.env
+          echo "PRIVATE_KEY=${{ secrets.PRIVATE_KEY }}" | sed ':a;N;$!ba;s/\n/\\n/g' >> backend/.env
           echo "CLIENT_EMAIL=${{ secrets.CLIENT_EMAIL }}" >> backend/.env
           echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> backend/.env
           echo "AUTH_URI=${{ secrets.AUTH_URI }}" >> backend/.env
@@ -46,6 +46,11 @@ jobs:
           echo "CLIENT_X509_CERT_URL=${{ secrets.CLIENT_X509_CERT_URL }}" >> backend/.env
           echo "UNIVERSE_DOMAIN=${{ secrets.UNIVERSE_DOMAIN }}" >> backend/.env
           echo ".env file created successfully."
+
+      # Debug .env file content (temporary for debugging purposes)
+      - name: Debug .env file
+        run: |
+          cat backend/.env || echo "Failed to read .env file."
 
       # Build Docker image
       - name: Build Docker image
@@ -76,7 +81,7 @@ jobs:
             docker ps
           fi
 
-      # Test container health
+      # Test container health (curl HTTP test)
       - name: Test Container Health
         run: |
           curl -I http://localhost:8000 || echo "Application not responding."
