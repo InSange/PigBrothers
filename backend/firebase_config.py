@@ -4,13 +4,13 @@ import firebase_admin
 from firebase_admin import credentials, firestore, db
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(dotenv_path="./env")
 
 firebase_config = {
     "type": os.environ.get("TYPE"),
     "project_id": os.environ.get("PROJECT_ID"),
     "private_key_id": os.environ.get("PRIVATE_KEY_ID"),
-    "private_key": os.environ.get("PRIVATE_KEY").replace("\\n", "\n"),
+    "private_key": os.environ.get("PRIVATE_KEY").replace("!", "\n"),
     "client_email": os.environ.get("CLIENT_EMAIL"),
     "client_id": os.environ.get("CLIENT_ID"),
     "auth_uri": os.environ.get("AUTH_URI"),
@@ -20,18 +20,21 @@ firebase_config = {
     "universe_domain": os.environ.get("UNIVERSE_DOMAIN")
 }
 
-# ÀÚ°İÁõ¸íÀ» »ı¼ºÇÏ¿© Firebase ÃÊ±âÈ­
-cred = credentials.Certificate(firebase_config)
 
-# Realtime Database ÃÊ±âÈ­
-firebase_admin.initialize_app(cred, {
-    'databaseURL': 'https://pigbrothers-b3b15-default-rtdb.firebaseio.com/'
-})
+try:
+    cred = credentials.Certificate(firebase_config)
+    firebase_admin.initialize_app(cred, {
+        'databaseURL': 'https://pigbrothers-b3b15-default-rtdb.firebaseio.com/'
+    })
+    print("Firebase Admin SDK Initialized!")
+except Exception as e:
+    print("Firebase ì´ˆê¸°í™” ì¤‘ ì˜¤ë¥˜ ë°œìƒ:", str(e))
 
-# Firestore Å¬¶óÀÌ¾ğÆ® »ı¼º
+
+# Firestore Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 firestore_client = firestore.client()
 
-# Realtime Database Å¬¶óÀÌ¾ğÆ® »ı¼º
+# Realtime Database Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ® ï¿½ï¿½ï¿½ï¿½
 realtime_db = db.reference("/")
 
 print("Firebase Admin SDK Initialized!")
