@@ -43,6 +43,12 @@ jobs:
             docker rm $CONTAINER_ID
           fi
 
+      # Remove Docker images except for the base images
+      - name: Remove Application Docker Images
+        run: |
+          docker images --filter "dangling=true" -q | xargs -r docker rmi -f
+
+
       # Build Docker image
       - name: Build Docker image
         run: |
@@ -54,4 +60,20 @@ jobs:
       # Run Docker container
       - name: Deploy Docker container
         run: |
-          docker run -d -p 8000:8000 pig:latest
+          docker run -d --name pig_app -p 8000:8000 pig:latest || exit 1
+      
+      # Wait for a few seconds to ensure the container has started
+      - name: Wait for Container Startup
+        run: sleep 5
+      
+      # Verify if the Docker container is running
+      - name: Verify Container is Running
+        run: |
+          if [ -z "$(docker ps -q -f name=pig_app)" ]; then
+            echo "Deployment failed: Container is not running."
+            echo "Fetching logs..."
+            docker logs pig_app || echo "No logs available: Container may have failed immediately."
+            exit 1
+          else
+            echo "Deployment successful: Container is running."
+          fi
