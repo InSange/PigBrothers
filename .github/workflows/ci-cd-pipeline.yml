@@ -36,7 +36,7 @@ jobs:
       # Build Docker image
       - name: Build Docker image
         run: |
-          cd backend
+          ls
           TAG=${{ github.sha }}
           docker build -t pig:$TAG .
       
