@@ -57,3 +57,26 @@ jobs:
       - name: Deploy Docker container
         run: |
           docker run -d --name pig_app -p 8000:8000 --env-file backend/.env pig:latest
+
+      # Check Docker container logs
+      - name: Fetch Docker logs
+        run: |
+          docker logs pig_app || echo "No logs available."
+
+      # Verify if the Docker container is running
+      - name: Verify Container Status
+        run: |
+          if [ -z "$(docker ps -q -f name=pig_app)" ]; then
+            echo "Container is not running."
+            docker ps -a
+            docker logs pig_app || echo "No logs available."
+            exit 1
+          else
+            echo "Container is running."
+            docker ps
+          fi
+
+      # Test container health
+      - name: Test Container Health
+        run: |
+          curl -I http://localhost:8000 || echo "Application not responding."
