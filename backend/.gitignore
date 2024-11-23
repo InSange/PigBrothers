@@ -1,4 +1,4 @@
-.pig/
+pig/
 __pycache__/
 *.pyc
 .vscode/
