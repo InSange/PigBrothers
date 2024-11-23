@@ -29,8 +29,6 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          ls
-          cat main.py
           python3 -m venv pig
           source pig/bin/activate
           pip install --upgrade pip
@@ -44,6 +42,11 @@ jobs:
             docker stop $CONTAINER_ID
             docker rm $CONTAINER_ID
           fi
+
+      # Remove all existing Docker images
+      - name: Remove All Docker Images
+        run: |
+          docker rmi -f $(docker images -q) || true
 
       # Build Docker image
       - name: Build Docker image
