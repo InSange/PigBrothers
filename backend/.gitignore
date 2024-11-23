@@ -2,3 +2,9 @@ pig/
 __pycache__/
 *.pyc
 .vscode/
+
+# Firebase JSON 키 파일
+*.json
+
+# 환경 변수 파일
+.env

@@ -1,7 +1,8 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from firebase_config import firestore_client
+from firebase_config import realtime_db
 from pydantic import BaseModel
 from typing import List
-import firebase_config  # Firebase ï¿½Ê±ï¿½È­
 
 app = FastAPI(
     title="My API with Response Models",
@@ -9,7 +10,6 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# ë°ì´í„° ëª¨ë¸ ì •ì˜
 class Item(BaseModel):
     name: str
     price: float
@@ -20,18 +20,63 @@ class ItemResponse(BaseModel):
     name: str
     price: float
     description: str = None
-@app.get("/")
+
+# Firestore¿¡ µ¥ÀÌÅÍ Ãß°¡
+@app.post("/firebase/items/", tags=["Firebase"])
+async def add_item_to_firestore(item: Item):
+    """
+    Add an item to Firestore.
+    """
+    doc_ref = firestore_client.collection("items").document()
+    doc_ref.set(item.dict())
+    return {"message": "Item added successfully", "id": doc_ref.id}
+
+# Firestore¿¡¼­ µ¥ÀÌÅÍ Á¶È¸
+@app.get("/firebase/items/{item_id}", tags=["Firebase"])
+async def get_item_from_firestore(item_id: str):
+    """
+    Retrieve an item from Firestore by ID.
+    """
+    doc_ref = firestore_client.collection("items").document(item_id)
+    doc = doc_ref.get()
+    if doc.exists:
+        return doc.to_dict()
+    else:
+        raise HTTPException(status_code=404, detail="Item not found")
+    
+# Realtime Database¿¡ µ¥ÀÌÅÍ Ãß°¡
+@app.post("/firebase/realtime/items/", tags=["Firebase"])
+async def add_item_to_realtime(item: Item):
+    """
+    Add an item to Realtime Database.
+    """
+    ref = realtime_db.child("items").push(item.dict())
+    return {"message": "Item added successfully", "id": ref.key}
+
+# Realtime Database¿¡¼­ µ¥ÀÌÅÍ Á¶È¸
+@app.get("/firebase/realtime/items/{item_id}", tags=["Firebase"])
+async def get_item_from_realtime(item_id: str):
+    """
+    Retrieve an item from Realtime Database by ID.
+    """
+    ref = realtime_db.child(f"items/{item_id}")
+    data = ref.get()
+    if data:
+        return data
+    else:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+@app.get("/test/", tags=["FirebaseTest"])
 async def root():
     return {"message": "Hello, Firebase with FastAPI!"}
 
 
-# Items íƒœê·¸ ì˜ˆì‹œ
 @app.post("/items/", tags=["Items"], summary="Create an Item", response_model=ItemResponse)
 def create_item(item: Item):
     """
     Create a new item and return the created item with an ID.
     """
-    # ì—¬ê¸°ì„œëŠ” IDë¥¼ ì„ì˜ë¡œ ìƒì„±í•˜ì—¬ ì‘ë‹µ ë°ì´í„°ì— ì¶”ê°€í•©ë‹ˆë‹¤.
+    
     return {"id": 1, **item.dict()}
 
 
