@@ -28,7 +28,6 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
-          git pull origin main
           python3 -m venv pig
           source pig/bin/activate
           pip install --upgrade pip
@@ -38,15 +37,16 @@ jobs:
       - name: Build Docker image
         run: |
           cd backend
-          ls
-          docker build -t pig .
-
+          TAG=${{ github.sha }}
+          docker build -t pig:$TAG .
+      
       # Deploy Docker container
       - name: Deploy Docker container
         run: |
+          TAG=${{ github.sha }}
           CONTAINER_ID=$(docker ps -q --filter ancestor=pig)
           if [ -n "$CONTAINER_ID" ]; then
             docker stop $CONTAINER_ID
             docker rm $CONTAINER_ID
           fi
-          docker run -d -p 8000:8000 pig
+          docker run -d -p 8000:8000 pig:$TAG
