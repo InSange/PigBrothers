@@ -13,11 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Check out the repository code
+      # Check out the repository
       - name: Check out repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
       # Set up Python environment
       - name: Set up Python 3.12
@@ -25,7 +23,7 @@ jobs:
         with:
           python-version: 3.12
 
-      # Create and activate virtual environment, install dependencies
+      # Install dependencies
       - name: Install dependencies
         run: |
           cd backend
@@ -34,71 +32,28 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Stop and remove any running container using the previous image
-      - name: Stop and Remove Existing Docker Container
+      # Create .env file from GitHub Secrets
+      - name: Generate .env file
         run: |
-          CONTAINER_ID=$(docker ps -q --filter "name=pig_app")
-          if [ -n "$CONTAINER_ID" ]; then
-            echo "Stopping existing container..."
-            docker stop $CONTAINER_ID
-            docker rm $CONTAINER_ID
-          else
-            echo "No existing container to stop."
-          fi
-
-      # Remove dangling Docker images
-      - name: Remove Dangling Docker Images
-        run: |
-          echo "Removing dangling images..."
-          docker images -f "dangling=true" -q | xargs -r docker rmi || echo "No dangling images to remove."
+          echo "TYPE=${{ secrets.TYPE }}" >> backend/.env
+          echo "PROJECT_ID=${{ secrets.PROJECT_ID }}" >> backend/.env
+          echo "PRIVATE_KEY=${{ secrets.PRIVATE_KEY }}" >> backend/.env
+          echo "CLIENT_EMAIL=${{ secrets.CLIENT_EMAIL }}" >> backend/.env
+          echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> backend/.env
+          echo "AUTH_URI=${{ secrets.AUTH_URI }}" >> backend/.env
+          echo "TOKEN_URI=${{ secrets.TOKEN_URI }}" >> backend/.env
+          echo "AUTH_PROVIDER_X509_CERT_URL=${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}" >> backend/.env
+          echo "CLIENT_X509_CERT_URL=${{ secrets.CLIENT_X509_CERT_URL }}" >> backend/.env
+          echo "UNIVERSE_DOMAIN=${{ secrets.UNIVERSE_DOMAIN }}" >> backend/.env
+          echo ".env file created successfully."
 
       # Build Docker image
       - name: Build Docker image
         run: |
           cd backend
-          docker build --no-cache -t pig .
-          docker images
+          docker build --no-cache -t pig:latest .
 
-      # Run Docker container with environment variables for Firebase
+      # Run Docker container using .env file
       - name: Deploy Docker container
-        env:  # GitHub Secrets를 Docker 컨테이너 환경 변수로 전달
-          TYPE: ${{ secrets.TYPE }}
-          PROJECT_ID: ${{ secrets.PROJECT_ID }}
-          PRIVATE_KEY_ID: ${{ secrets.PRIVATE_KEY_ID }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          CLIENT_EMAIL: ${{ secrets.CLIENT_EMAIL }}
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          AUTH_URI: ${{ secrets.AUTH_URI }}
-          TOKEN_URI: ${{ secrets.TOKEN_URI }}
-          AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}
-          CLIENT_X509_CERT_URL: ${{ secrets.CLIENT_X509_CERT_URL }}
-          UNIVERSE_DOMAIN: ${{ secrets.UNIVERSE_DOMAIN }}
         run: |
-          docker run -d -p 8000:8000 \
-            -e TYPE=${{ secrets.TYPE }} \
-            -e PROJECT_ID=${{ secrets.PROJECT_ID }} \
-            -e PRIVATE_KEY_ID=${{ secrets.PRIVATE_KEY_ID }} \
-            -e PRIVATE_KEY=${{ secrets.PRIVATE_KEY }} \
-            -e CLIENT_EMAIL=${{ secrets.CLIENT_EMAIL }} \
-            -e CLIENT_ID=${{ secrets.CLIENT_ID }} \
-            -e AUTH_URI=${{ secrets.AUTH_URI }} \
-            -e TOKEN_URI=${{ secrets.TOKEN_URI }} \
-            -e AUTH_PROVIDER_X509_CERT_URL=${{ secrets.AUTH_PROVIDER_X509_CERT_URL }} \
-            -e CLIENT_X509_CERT_URL=${{ secrets.CLIENT_X509_CERT_URL }} \
-            -e UNIVERSE_DOMAIN=${{ secrets.UNIVERSE_DOMAIN }} \
-            pig:latest || exit 1
-
-      # Wait for container startup
-      - name: Wait for Container Startup
-        run: sleep 10
-
-      # Verify if the Docker container is running
-      - name: Verify Container is Running
-        run: |
-          if [ -z "$(docker ps -q -f name=pig_app)" ]; then
-            echo "Deployment failed: Container is not running."
-            docker logs pig_app || echo "No logs available: Container may have failed immediately."
-            exit 1
-          else
-            echo "Deployment successful: Container is running."
-          fi
+          docker run -d --name pig_app -p 8000:8000 --env-file backend/.env pig:latest
