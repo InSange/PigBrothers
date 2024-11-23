@@ -29,6 +29,8 @@ jobs:
       - name: Install dependencies
         run: |
           cd backend
+          ls
+          cat main.py
           python3 -m venv pig
           source pig/bin/activate
           pip install --upgrade pip
