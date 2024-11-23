@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Check out the repository code with latest updates
+      # Check out the repository code
       - name: Check out repository
         uses: actions/checkout@v3
         with:
@@ -37,17 +37,20 @@ jobs:
       # Stop and remove any running container using the previous image
       - name: Stop and Remove Existing Docker Container
         run: |
-          CONTAINER_ID=$(docker ps -q --filter ancestor=pig)
+          CONTAINER_ID=$(docker ps -q --filter "name=pig_app")
           if [ -n "$CONTAINER_ID" ]; then
+            echo "Stopping existing container..."
             docker stop $CONTAINER_ID
             docker rm $CONTAINER_ID
+          else
+            echo "No existing container to stop."
           fi
 
-      # Remove Docker images except for the base images
-      - name: Remove Application Docker Images
+      # Remove dangling Docker images
+      - name: Remove Dangling Docker Images
         run: |
-          docker images --filter "dangling=true" -q | xargs -r docker rmi -f
-
+          echo "Removing dangling images..."
+          docker images -f "dangling=true" -q | xargs -r docker rmi || echo "No dangling images to remove."
 
       # Build Docker image
       - name: Build Docker image
@@ -57,21 +60,44 @@ jobs:
           docker build --no-cache -t pig:$TAG .
           docker tag pig:$TAG pig:latest
 
-      # Run Docker container
+      # Run Docker container with environment variables for Firebase
       - name: Deploy Docker container
+        env:  # GitHub Secrets를 Docker 컨테이너 환경 변수로 전달
+          TYPE: ${{ secrets.TYPE }}
+          PROJECT_ID: ${{ secrets.PROJECT_ID }}
+          PRIVATE_KEY_ID: ${{ secrets.PRIVATE_KEY_ID }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          CLIENT_EMAIL: ${{ secrets.CLIENT_EMAIL }}
+          CLIENT_ID: ${{ secrets.CLIENT_ID }}
+          AUTH_URI: ${{ secrets.AUTH_URI }}
+          TOKEN_URI: ${{ secrets.TOKEN_URI }}
+          AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.AUTH_PROVIDER_X509_CERT_URL }}
+          CLIENT_X509_CERT_URL: ${{ secrets.CLIENT_X509_CERT_URL }}
+          UNIVERSE_DOMAIN: ${{ secrets.UNIVERSE_DOMAIN }}
         run: |
-          docker run -d --name pig_app -p 8000:8000 pig:latest || exit 1
-      
-      # Wait for a few seconds to ensure the container has started
+          docker run -d --name pig_app -p 8000:8000 \
+            -e TYPE=${{ secrets.TYPE }} \
+            -e PROJECT_ID=${{ secrets.PROJECT_ID }} \
+            -e PRIVATE_KEY_ID=${{ secrets.PRIVATE_KEY_ID }} \
+            -e PRIVATE_KEY=${{ secrets.PRIVATE_KEY }} \
+            -e CLIENT_EMAIL=${{ secrets.CLIENT_EMAIL }} \
+            -e CLIENT_ID=${{ secrets.CLIENT_ID }} \
+            -e AUTH_URI=${{ secrets.AUTH_URI }} \
+            -e TOKEN_URI=${{ secrets.TOKEN_URI }} \
+            -e AUTH_PROVIDER_X509_CERT_URL=${{ secrets.AUTH_PROVIDER_X509_CERT_URL }} \
+            -e CLIENT_X509_CERT_URL=${{ secrets.CLIENT_X509_CERT_URL }} \
+            -e UNIVERSE_DOMAIN=${{ secrets.UNIVERSE_DOMAIN }} \
+            pig:latest || exit 1
+
+      # Wait for container startup
       - name: Wait for Container Startup
-        run: sleep 5
-      
+        run: sleep 10
+
       # Verify if the Docker container is running
       - name: Verify Container is Running
         run: |
           if [ -z "$(docker ps -q -f name=pig_app)" ]; then
             echo "Deployment failed: Container is not running."
-            echo "Fetching logs..."
             docker logs pig_app || echo "No logs available: Container may have failed immediately."
             exit 1
           else
