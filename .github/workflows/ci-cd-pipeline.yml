@@ -32,25 +32,24 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
+      # Stop and remove any running container using the previous image
+      - name: Stop and Remove Existing Docker Container
+        run: |
+          CONTAINER_ID=$(docker ps -q --filter ancestor=pig)
+          if [ -n "$CONTAINER_ID" ]; then
+            docker stop $CONTAINER_ID
+            docker rm $CONTAINER_ID
+          fi
+
       # Build Docker image
       - name: Build Docker image
         run: |
           cd backend
           TAG=${{ github.sha }}
           docker build --no-cache -t pig:$TAG .
-
-      # Stop and remove existing Docker container
-      - name: Stop and Remove Existing Docker Container
-        run: |
-          TAG=${{ github.sha }}
-          CONTAINER_ID=$(docker ps -q --filter ancestor=pig:$TAG)
-          if [ -n "$CONTAINER_ID" ]; then
-            docker stop $CONTAINER_ID
-            docker rm $CONTAINER_ID
-          fi
+          docker tag pig:$TAG pig:latest
 
       # Run Docker container
       - name: Deploy Docker container
         run: |
-          TAG=${{ github.sha }}
-          docker run -d -p 8000:8000 pig:$TAG
+          docker run -d -p 8000:8000 pig:latest
