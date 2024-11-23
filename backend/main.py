@@ -13,6 +13,7 @@ class Item(BaseModel):
     price: float
     description: str = None
 
-@app.post("/items/")
+
+@app.post("/items/", tags=["root"])
 def create_item(item: Item):
     return {"item": item}
