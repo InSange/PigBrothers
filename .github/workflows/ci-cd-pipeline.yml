@@ -43,10 +43,11 @@ jobs:
             docker rm $CONTAINER_ID
           fi
 
-      # Remove all existing Docker images
-      - name: Remove All Docker Images
+      # Remove Docker images except for the base images
+      - name: Remove Application Docker Images
         run: |
-          docker rmi -f $(docker images -q) || true
+          docker images --filter "dangling=true" -q | xargs -r docker rmi -f
+
 
       # Build Docker image
       - name: Build Docker image
