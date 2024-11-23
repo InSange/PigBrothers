@@ -34,17 +34,11 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      # Build Docker image
-      - name: Build Docker image
-        run: |
-          ls
           TAG=${{ github.sha }}
           docker build -t pig:$TAG .
-      
-      # Deploy Docker container
-      - name: Deploy Docker container
-        run: |
-          TAG=${{ github.sha }}
+
+          ls -al
+
           CONTAINER_ID=$(docker ps -q --filter ancestor=pig)
           if [ -n "$CONTAINER_ID" ]; then
             docker stop $CONTAINER_ID
