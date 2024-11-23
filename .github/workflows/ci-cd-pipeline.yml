@@ -61,3 +61,15 @@ jobs:
       - name: Deploy Docker container
         run: |
           docker run -d -p 8000:8000 pig:latest
+
+
+      # Verify if the Docker container is running
+      - name: Verify Container is Running
+        run: |
+          if [ -z "$(docker ps -q -f name=pig_app)" ]; then
+            echo "Deployment failed: Container is not running."
+            docker logs pig_app
+            exit 1
+          else
+            echo "Deployment successful: Container is running."
+          fi
