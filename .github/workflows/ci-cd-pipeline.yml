@@ -28,7 +28,6 @@ jobs:
       # Create and activate virtual environment, install dependencies
       - name: Install dependencies
         run: |
-          echo ${{ secrets.TYPE }}
           cd backend
           python3 -m venv pig
           source pig/bin/activate
@@ -38,17 +37,20 @@ jobs:
       # Stop and remove any running container using the previous image
       - name: Stop and Remove Existing Docker Container
         run: |
-          CONTAINER_ID=$(docker ps -q --filter ancestor=pig)
+          CONTAINER_ID=$(docker ps -q --filter "name=pig_app")
           if [ -n "$CONTAINER_ID" ]; then
+            echo "Stopping existing container..."
             docker stop $CONTAINER_ID
             docker rm $CONTAINER_ID
+          else
+            echo "No existing container to stop."
           fi
 
-      # Remove Docker images except for the base images
-      - name: Remove Application Docker Images
+      # Remove dangling Docker images
+      - name: Remove Dangling Docker Images
         run: |
-          docker images --filter "dangling=true" -q | xargs -r docker rmi -f
-
+          echo "Removing dangling images..."
+          docker images -f "dangling=true" -q | xargs -r docker rmi || echo "No dangling images to remove."
 
       # Build Docker image
       - name: Build Docker image
@@ -73,12 +75,12 @@ jobs:
           CLIENT_X509_CERT_URL: ${{ secrets.CLIENT_X509_CERT_URL }}
           UNIVERSE_DOMAIN: ${{ secrets.UNIVERSE_DOMAIN }}
         run: |
-          docker run -d --name pig_app -p 8000:8000 pig:latest || exit 1
-      
+          docker run -d --name pig_app -p 8000:8000 --env-file backend/.env pig:latest || exit 1
+
       # Wait for a few seconds to ensure the container has started
       - name: Wait for Container Startup
-        run: sleep 5
-      
+        run: sleep 10
+
       # Verify if the Docker container is running
       - name: Verify Container is Running
         run: |
