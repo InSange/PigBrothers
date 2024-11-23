@@ -56,9 +56,8 @@ jobs:
       - name: Build Docker image
         run: |
           cd backend
-          TAG=${{ github.sha }}
-          docker build --no-cache -t pig:$TAG .
-          docker tag pig:$TAG pig:latest
+          docker build --no-cache -t pig .
+          docker images
 
       # Run Docker container with environment variables for Firebase
       - name: Deploy Docker container
