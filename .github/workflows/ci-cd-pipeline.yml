@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Check out the repository code with latest updates
+      # Check out the repository code
       - name: Check out repository
         uses: actions/checkout@v3
         with:
@@ -60,9 +60,9 @@ jobs:
           docker build --no-cache -t pig:$TAG .
           docker tag pig:$TAG pig:latest
 
-      # Run Docker container
+      # Run Docker container with environment variables for Firebase
       - name: Deploy Docker container
-        env:
+        env:  # GitHub Secrets를 Docker 컨테이너 환경 변수로 전달
           TYPE: ${{ secrets.TYPE }}
           PROJECT_ID: ${{ secrets.PROJECT_ID }}
           PRIVATE_KEY_ID: ${{ secrets.PRIVATE_KEY_ID }}
@@ -75,9 +75,21 @@ jobs:
           CLIENT_X509_CERT_URL: ${{ secrets.CLIENT_X509_CERT_URL }}
           UNIVERSE_DOMAIN: ${{ secrets.UNIVERSE_DOMAIN }}
         run: |
-          docker run -d --name pig_app -p 8000:8000 --env-file backend/.env pig:latest || exit 1
+          docker run -d --name pig_app -p 8000:8000 \
+            -e TYPE=${{ secrets.TYPE }} \
+            -e PROJECT_ID=${{ secrets.PROJECT_ID }} \
+            -e PRIVATE_KEY_ID=${{ secrets.PRIVATE_KEY_ID }} \
+            -e PRIVATE_KEY=${{ secrets.PRIVATE_KEY }} \
+            -e CLIENT_EMAIL=${{ secrets.CLIENT_EMAIL }} \
+            -e CLIENT_ID=${{ secrets.CLIENT_ID }} \
+            -e AUTH_URI=${{ secrets.AUTH_URI }} \
+            -e TOKEN_URI=${{ secrets.TOKEN_URI }} \
+            -e AUTH_PROVIDER_X509_CERT_URL=${{ secrets.AUTH_PROVIDER_X509_CERT_URL }} \
+            -e CLIENT_X509_CERT_URL=${{ secrets.CLIENT_X509_CERT_URL }} \
+            -e UNIVERSE_DOMAIN=${{ secrets.UNIVERSE_DOMAIN }} \
+            pig:latest || exit 1
 
-      # Wait for a few seconds to ensure the container has started
+      # Wait for container startup
       - name: Wait for Container Startup
         run: sleep 10
 
@@ -86,7 +98,6 @@ jobs:
         run: |
           if [ -z "$(docker ps -q -f name=pig_app)" ]; then
             echo "Deployment failed: Container is not running."
-            echo "Fetching logs..."
             docker logs pig_app || echo "No logs available: Container may have failed immediately."
             exit 1
           else
