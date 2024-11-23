@@ -28,6 +28,7 @@ jobs:
       # Create and activate virtual environment, install dependencies
       - name: Install dependencies
         run: |
+          echo ${{ secrets.TYPE }}
           cd backend
           python3 -m venv pig
           source pig/bin/activate
