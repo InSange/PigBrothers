@@ -1,4 +1,3 @@
-import { AlignCenterRowStack } from '@/app/_components/common';
 import styled from 'styled-components';
 
 export const UserCard = styled.div`

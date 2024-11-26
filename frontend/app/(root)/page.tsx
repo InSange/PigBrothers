@@ -1,7 +1,7 @@
 'use client';
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Head from 'next/head';
+import { Layout, LogoImage, LogoTitle } from './_related/root.styled';
+import { useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
@@ -15,11 +15,9 @@ export default function Home() {
   }, [router]);
 
   return (
-    <>
-      <Head>
-        <title>로딩 페이지</title>
-      </Head>
-      <div>여기는 로딩, 시작 페이지</div>
-    </>
+    <Layout>
+      <LogoImage src={'/logo.svg'} alt='logo' width={300} height={300} />
+      <LogoTitle>PIG BROTHERS에 접속 중 . . </LogoTitle>
+    </Layout>
   );
 }
