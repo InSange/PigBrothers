@@ -10,7 +10,7 @@ firebase_config = {
     "type": os.environ.get("TYPE"),
     "project_id": os.environ.get("PROJECT_ID"),
     "private_key_id": os.environ.get("PRIVATE_KEY_ID"),
-    "private_key": os.environ.get("PRIVATE_KEY").replace("\\n", "\n"),
+    "private_key": os.environ.get("PRIVATE_KEY"),
     "client_email": os.environ.get("CLIENT_EMAIL"),
     "client_id": os.environ.get("CLIENT_ID"),
     "auth_uri": os.environ.get("AUTH_URI"),
@@ -19,6 +19,8 @@ firebase_config = {
     "client_x509_cert_url": os.environ.get("CLIENT_X509_CERT_URL"),
     "universe_domain": os.environ.get("UNIVERSE_DOMAIN")
 }
+
+#print(firebase_config)
 
 # 자격증명을 생성하여 Firebase 초기화
 cred = credentials.Certificate(firebase_config)

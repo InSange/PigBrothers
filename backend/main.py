@@ -21,29 +21,77 @@ class ItemResponse(BaseModel):
     price: float
     description: str = None
 
+class UserModel(BaseModel):
+    Name: str
+    RoomID: str
+    UserID: str
+
 # Firestore에 데이터 추가
-@app.post("/firebase/items/", tags=["Firebase"])
-async def add_item_to_firestore(item: Item):
+"""
+User API START
+"""
+@app.post("/firebase/User/", tags=["Firebase"], summary="Create an User", response_model=UserModel)
+async def add_item_to_firestore(data: UserModel):
     """
-    Add an item to Firestore.
+    Add an User to Firestore.
     """
-    doc_ref = firestore_client.collection("items").document()
-    doc_ref.set(item.dict())
-    return {"message": "Item added successfully", "id": doc_ref.id}
+    # UserID duplication Check
+    user_query = firestore_client.collection("User").where("UserID", "==", data.UserID).stream()
+    for _ in user_query:
+        raise HTTPException(status_code=400, detail="UserID already exists in the User collection")
+    
+    # Add data in FireStore
+    doc_ref = firestore_client.collection("User").document()
+    if(not data.Name):
+        raise HTTPException(status_code=404, detail="data not include UserName")
+    if(not data.UserID):
+        raise HTTPException(status_code=404, detail="UserID not found")
+    doc_ref.set(data.dict())
+    return {"message": "Item added successfully", "id": doc_ref.id, **data.dict()}
 
 # Firestore에서 데이터 조회
-@app.get("/firebase/items/{item_id}", tags=["Firebase"])
-async def get_item_from_firestore(item_id: str):
+@app.get("/firebase/User/{item_id}", tags=["Firebase"], summary="Get User by UserID", response_model=UserModel)
+async def get_item_from_firestore(user_id: str):
     """
-    Retrieve an item from Firestore by ID.
+    Retrieve an User from Firestore by ID.
     """
-    doc_ref = firestore_client.collection("items").document(item_id)
-    doc = doc_ref.get()
-    if doc.exists:
-        return doc.to_dict()
-    else:
-        raise HTTPException(status_code=404, detail="Item not found")
-    
+    try:
+        # UserID를 기반으로 Firestore에서 사용자 조회
+        user_query = firestore_client.collection("User").where("UserID", "==", user_id).stream()
+
+        # 결과 처리
+        user_data = None
+        for doc in user_query:
+            user_data = doc.to_dict()  # 첫 번째 결과를 가져옵니다.
+            break  # UserID는 고유하다고 가정하므로 하나의 결과만 가져옵니다.
+
+        # 사용자 존재 여부 확인
+        if not user_data:
+            raise HTTPException(status_code=404, detail=f"User with UserID '{user_id}' not found")
+
+        return user_data  # 조회된 사용자 데이터 반환
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/firebase/User/{item_id}", tags=["Firebase"])
+async def update_room_from_firestore(item_id: str, update_data: dict):
+    """
+    Update a document in a Firestore User.
+    """
+    try:
+        doc_ref = firestore_client.collection("Room").document(item_id)
+
+        if not doc_ref.get().exists:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        doc_ref.update(update_data)
+        return update_data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+"""
+User API END
+"""
 # Realtime Database에 데이터 추가
 @app.post("/firebase/realtime/items/", tags=["Firebase"])
 async def add_item_to_realtime(item: Item):

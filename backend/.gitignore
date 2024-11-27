@@ -2,6 +2,7 @@ pig/
 __pycache__/
 *.pyc
 .vscode/
+firebase_config.py
 
 # Firebase JSON Å° ÆÄÀÏ
 *.json
