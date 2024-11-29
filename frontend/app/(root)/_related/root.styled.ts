@@ -10,12 +10,18 @@ export const Layout = styled.div`
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
   background-color: ${({ theme }) => theme.colors.backgroundColor};
 `;
 
 export const LogoTitle = styled.div`
   font-size: 24px;
   font-weight: bold;
+`;
+
+export const Header = styled.div`
+  position: sticky;
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  background-color: ${({ theme }) => theme.colors.primary};
 `;

@@ -15,7 +15,13 @@ export default function Home() {
   }, [router]);
 
   return (
-    <Layout>
+    <Layout
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
       <LogoImage src={'/logo.svg'} alt='logo' width={300} height={300} />
       <LogoTitle>PIG BROTHERS에 접속 중 . . </LogoTitle>
     </Layout>
