@@ -1,14 +1,15 @@
+'use client';
 import React from 'react';
-import { AlignCenterRowStack } from '../_components/common';
 import RoomList from './_sections/RoomList';
 import CreateRoomButton from './_sections/CreateRoomButton';
+import { Layout } from '../(root)/_related/root.styled';
 
 const page = () => {
   return (
-    <div>
+    <Layout>
       <CreateRoomButton />
       <RoomList />
-    </div>
+    </Layout>
   );
 };
 
