@@ -1,4 +1,5 @@
-import { createGlobalStyle } from 'styled-components';
+import styled, { createGlobalStyle, css } from 'styled-components';
+import { ButtonProps } from './Button';
 
 const GlobalStyle = createGlobalStyle`
   html,
@@ -21,3 +22,41 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 export default GlobalStyle;
+
+export const ButtonStyled = styled.button<ButtonProps>`
+  width: 100%;
+  background-color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.secondary};
+  border: none;
+  border-radius: 4px;
+  ${({ size }) =>
+    size === 'small' &&
+    css`
+      padding: 4px 16px;
+    `}
+  ${({ size }) =>
+    size === 'medium' &&
+    css`
+      padding: 8px 16px;
+    `}
+  ${({ size }) =>
+    size === 'large' &&
+    css`
+      padding: 12px 24px;
+    `}
+  cursor: pointer;
+  &:hover {
+    background-color: ${({ theme }) =>
+      `${theme.colors.primary}CC`}; // 80% 투명도
+  }
+  &:active {
+    background-color: ${({ theme }) => `${theme.colors.primary}`};
+  }
+`;
+
+export const ContentContainer = styled.div`
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+`;
