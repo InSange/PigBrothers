@@ -1,10 +1,12 @@
 'use client';
 import { StyledLink } from '@/app/_components/common';
-import React from 'react';
 
-const BackButton = () => {
+type Props = {
+  href: string;
+};
+const BackButton = ({ href }: Props) => {
   return (
-    <StyledLink href='/room'>
+    <StyledLink href={href}>
       <button>나가기 버튼</button>
     </StyledLink>
   );

@@ -1,13 +1,19 @@
 'use client';
-import React, { useState } from 'react';
 import {
+  ButtonContainer,
+  CloseButton,
   ModalBackDrop,
   ModalContainer,
-  CloseButton,
   ModalFooter,
   ModalHeader,
+  ModalHeaderTitle,
+  XIcon,
 } from '@/app/_components/common';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { CreateRoomButtonContainer } from '../_related/room.styled';
+import Textfield from '@/app/_components/TextField';
+import Button from '@/app/_components/Button';
 
 const CreateRoomButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,19 +34,26 @@ const CreateRoomButton = () => {
 
   return (
     <>
-      <button onClick={handleOpenModal}>방 개설</button>
+      <CreateRoomButtonContainer onClick={handleOpenModal}>
+        +
+      </CreateRoomButtonContainer>
       {isModalOpen && (
         <ModalBackDrop>
           <ModalContainer>
             <ModalHeader>
-              <div>방 개설하기</div>
-              <CloseButton onClick={handleCloseModal}>X</CloseButton>
+              <ModalHeaderTitle>방 개설하기</ModalHeaderTitle>
+              <CloseButton onClick={handleCloseModal}>
+                <XIcon src={'/x.svg'} />
+              </CloseButton>
             </ModalHeader>
-            <p>방 이름을 설정해주세요</p>
-            <input type='text' />
+            <Textfield placeholder='방 제목' />
             <ModalFooter>
-              <button onClick={handleCloseModal}>취소</button>
-              <button onClick={handleConfirmAction}>확인</button>
+              <ButtonContainer>
+                <Button color='secondary' onClick={handleCloseModal}>
+                  취소
+                </Button>
+                <Button onClick={handleConfirmAction}>확인</Button>
+              </ButtonContainer>
             </ModalFooter>
           </ModalContainer>
         </ModalBackDrop>
