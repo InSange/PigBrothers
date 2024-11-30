@@ -114,21 +114,21 @@ class RoomModel(BaseModel):
 Room API START
 """
 @app.post("/firebase/Room/", tags=["Room"], summary="Create a Game Room", response_model=RoomModel)
-async def add_room(data: RoomModel):
+async def add_room(room_name: str, room_id: str, user_id: str):
     """
     Create a new game room and set the creator as the Room Host.
     """
     # Check essential field
-    if not data.Name:
+    if not room_name:
         raise HTTPException(status_code=400, detail="Room Name cannot be empty")
-    if not data.RoomID:
+    if not room_id:
         raise HTTPException(status_code=400, detail="Room ID cannot be empty")
 
     try:
         # RoomID 중복 여부 확인
-        room_query = firestore_client.collection("Room").document(data.RoomID).get()
+        room_query = firestore_client.collection("Room").document(room_id).get()
         if room_query.exists:
-            raise HTTPException(status_code=400, detail=f"Room with ID '{data.RoomID}' already exists")
+            raise HTTPException(status_code=400, detail=f"Room with ID '{room_id}' already exists")
 
         # Chat 문서 생성 (방에서 사용할 채팅 내역)
         chat_ref = firestore_client.collection("Chat").document()
@@ -136,24 +136,24 @@ async def add_room(data: RoomModel):
 
         chat_data = {
             "ChatID": chat_id, # 채팅 자료 ID
-            "RoomID": data.RoomID, # 방 ID
+            "RoomID": room_id, # 방 ID
             "Messages": [], # 메시지 배열
         }
         chat_ref.set(chat_data)
 
         # 초기화 값 설정
         room_data = {
-            "MaxUser": data.MaxUser,
-            "Name": data.Name,
-            "RoomID": data.RoomID,
+            "MaxUser": 8,
+            "Name": room_name,
+            "RoomID": room_id,
             "RoomState": False,  # 항상 False로 초기화
-            "RoomHostID": data.RoomHostID,
-            "UserList": [data.RoomHostID],  # 방장이 UserList에 자동으로 추가
+            "RoomHostID": user_id,
+            "UserList": [user_id],  # 방장이 UserList에 자동으로 추가
             "ChatID": chat_id,
         }
 
         # Firestore에 저장
-        firestore_client.collection("Room").document(data.RoomID).set(room_data)
+        firestore_client.collection("Room").document(room_id).set(room_data)
 
         return room_data  # 성공적으로 생성된 방 데이터 반환
     except Exception as e:
