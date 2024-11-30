@@ -1,13 +1,15 @@
-"use client";
+'use client';
 
-import { ReactNode } from "react";
-import { ThemeProvider, type DefaultTheme } from "styled-components";
-import GlobalStyle from "@/app/_components/globalstyles";
+import { ReactNode } from 'react';
+import { ThemeProvider, type DefaultTheme } from 'styled-components';
+import GlobalStyle from '@/app/_components/globalstyles';
 
 const theme: DefaultTheme = {
   colors: {
-    primary: "#111",
-    secondary: "#0070f3",
+    primary: '#D93167',
+    secondary: '#FFEBEB',
+    backgroundColor: '#FFEBEB',
+    defaultBackground: '#FFF5F5',
   },
 };
 

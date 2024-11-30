@@ -3,13 +3,17 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "swagger": "swagger-typescript-api -p http://13.125.139.238:8000/openapi.json -r -o ./types -d --extract-request-body --extract-response-body --extract-response-error --axios"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.61.0",
+    "axios": "^1.7.7",
     "next": "latest",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "swagger-typescript-api": "^13.0.23"
   },
   "devDependencies": {
     "@types/node": "^22.7.4",
