@@ -30,18 +30,42 @@ export const ModalContainer = styled.div`
   border-radius: 5px;
   width: 400px;
   max-width: 80%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 `;
 
 export const ModalHeader = styled(AlignCenterRowStack)`
   justify-content: space-between;
 `;
 
+export const ModalHeaderTitle = styled.h4`
+  font-size: 18px;
+  margin: 0px;
+  color: #000;
+`;
+
 export const ModalFooter = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-top: 20px;
+  padding-block: 4px;
 `;
 
-export const CloseButton = styled.span`
+export const ButtonContainer = styled.div`
+  width: '20%';
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+`;
+
+export const CloseButton = styled.button`
   cursor: pointer;
+  background-color: transparent;
+  border: none;
+`;
+
+export const XIcon = styled.img`
+  border-radius: 99999999px;
+  width: 20px;
+  height: 20px;
 `;

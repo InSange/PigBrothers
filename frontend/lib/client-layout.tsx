@@ -8,8 +8,12 @@ const theme: DefaultTheme = {
   colors: {
     primary: '#D93167',
     secondary: '#FFEBEB',
+    gray: '#939393',
     backgroundColor: '#FFEBEB',
     defaultBackground: '#FFF5F5',
+    disabledBackground: '#F5F5F5',
+    disabledText: '#BDBDBD',
+    error: '#FF0000',
   },
 };
 

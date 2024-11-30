@@ -7,6 +7,10 @@ declare module 'styled-components' {
       secondary: string;
       backgroundColor: string;
       defaultBackground: string;
+      disabledBackground: string;
+      disabledText: string;
+      error: string;
+      gray: string;
     };
   }
 }

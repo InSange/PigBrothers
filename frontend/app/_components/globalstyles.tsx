@@ -26,8 +26,9 @@ export default GlobalStyle;
 
 export const ButtonStyled = styled.button<ButtonProps>`
   width: 100%;
-  background-color: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.secondary};
+  background-color: ${({ theme, color }) =>
+    color === 'primary' ? theme.colors.primary : theme.colors.gray};
+  color: #fff;
   border: none;
   border-radius: 4px;
   ${({ size }) =>
@@ -47,11 +48,12 @@ export const ButtonStyled = styled.button<ButtonProps>`
     `}
   cursor: pointer;
   &:hover {
-    background-color: ${({ theme }) =>
-      `${theme.colors.primary}CC`}; // 80% 투명도
+    background-color: ${({ theme, color }) =>
+      `${color === 'primary' ? theme.colors.primary : theme.colors.gray}CC`};
   }
   &:active {
-    background-color: ${({ theme }) => `${theme.colors.primary}`};
+    background-color: ${({ theme, color }) =>
+      `${color === 'primary' ? theme.colors.primary : theme.colors.gray}`};
   }
 `;
 
