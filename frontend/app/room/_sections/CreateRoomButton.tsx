@@ -1,13 +1,14 @@
 'use client';
-import React, { useState } from 'react';
 import {
+  CloseButton,
   ModalBackDrop,
   ModalContainer,
-  CloseButton,
   ModalFooter,
   ModalHeader,
 } from '@/app/_components/common';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { CreateRoomButtonContainer } from '../_related/room.styled';
 
 const CreateRoomButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,7 +29,9 @@ const CreateRoomButton = () => {
 
   return (
     <>
-      <button onClick={handleOpenModal}>방 개설</button>
+      <CreateRoomButtonContainer onClick={handleOpenModal}>
+        +
+      </CreateRoomButtonContainer>
       {isModalOpen && (
         <ModalBackDrop>
           <ModalContainer>
