@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes } from 'react';
+import { InputHTMLAttributes } from 'react';
 import styled from 'styled-components';
 
 // Input 속성 타입 정의
@@ -7,8 +7,8 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 // Input 컴포넌트
-const Textfield = ({ error = false, ...rest }: InputProps) => {
-  return <InputStyled error={error} {...rest} />;
+const Textfield = ({ ...rest }: InputProps) => {
+  return <InputStyled {...rest} />;
 };
 
 export default Textfield;
