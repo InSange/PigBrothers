@@ -136,27 +136,18 @@ export type AddChatMessageFirebaseChatChatIdAddPutError = HTTPValidationError;
 
 export type AddItemToRealtimeFirebaseRealtimeItemsPostData = any;
 
-export type AddItemToRealtimeFirebaseRealtimeItemsPostError =
-  HTTPValidationError;
+export type AddItemToRealtimeFirebaseRealtimeItemsPostError = HTTPValidationError;
 
 export type GetItemFromRealtimeFirebaseRealtimeItemsItemIdGetData = any;
 
-export type GetItemFromRealtimeFirebaseRealtimeItemsItemIdGetError =
-  HTTPValidationError;
+export type GetItemFromRealtimeFirebaseRealtimeItemsItemIdGetError = HTTPValidationError;
 
-import type {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  HeadersDefaults,
-  ResponseType,
-} from 'axios';
-import axios from 'axios';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse, HeadersDefaults, ResponseType } from "axios";
+import axios from "axios";
 
 export type QueryParamsType = Record<string | number, any>;
 
-export interface FullRequestParams
-  extends Omit<AxiosRequestConfig, 'data' | 'params' | 'url' | 'responseType'> {
+export interface FullRequestParams extends Omit<AxiosRequestConfig, "data" | "params" | "url" | "responseType"> {
   /** set parameter to `true` for call `securityWorker` for this request */
   secure?: boolean;
   /** request path */
@@ -171,44 +162,32 @@ export interface FullRequestParams
   body?: unknown;
 }
 
-export type RequestParams = Omit<
-  FullRequestParams,
-  'body' | 'method' | 'query' | 'path'
->;
+export type RequestParams = Omit<FullRequestParams, "body" | "method" | "query" | "path">;
 
-export interface ApiConfig<SecurityDataType = unknown>
-  extends Omit<AxiosRequestConfig, 'data' | 'cancelToken'> {
+export interface ApiConfig<SecurityDataType = unknown> extends Omit<AxiosRequestConfig, "data" | "cancelToken"> {
   securityWorker?: (
-    securityData: SecurityDataType | null
+    securityData: SecurityDataType | null,
   ) => Promise<AxiosRequestConfig | void> | AxiosRequestConfig | void;
   secure?: boolean;
   format?: ResponseType;
 }
 
 export enum ContentType {
-  Json = 'application/json',
-  FormData = 'multipart/form-data',
-  UrlEncoded = 'application/x-www-form-urlencoded',
-  Text = 'text/plain',
+  Json = "application/json",
+  FormData = "multipart/form-data",
+  UrlEncoded = "application/x-www-form-urlencoded",
+  Text = "text/plain",
 }
 
 export class HttpClient<SecurityDataType = unknown> {
   public instance: AxiosInstance;
   private securityData: SecurityDataType | null = null;
-  private securityWorker?: ApiConfig<SecurityDataType>['securityWorker'];
+  private securityWorker?: ApiConfig<SecurityDataType>["securityWorker"];
   private secure?: boolean;
   private format?: ResponseType;
 
-  constructor({
-    securityWorker,
-    secure,
-    format,
-    ...axiosConfig
-  }: ApiConfig<SecurityDataType> = {}) {
-    this.instance = axios.create({
-      ...axiosConfig,
-      baseURL: axiosConfig.baseURL || '',
-    });
+  constructor({ securityWorker, secure, format, ...axiosConfig }: ApiConfig<SecurityDataType> = {}) {
+    this.instance = axios.create({ ...axiosConfig, baseURL: axiosConfig.baseURL || "" });
     this.secure = secure;
     this.format = format;
     this.securityWorker = securityWorker;
@@ -218,10 +197,7 @@ export class HttpClient<SecurityDataType = unknown> {
     this.securityData = data;
   };
 
-  protected mergeRequestParams(
-    params1: AxiosRequestConfig,
-    params2?: AxiosRequestConfig
-  ): AxiosRequestConfig {
+  protected mergeRequestParams(params1: AxiosRequestConfig, params2?: AxiosRequestConfig): AxiosRequestConfig {
     const method = params1.method || (params2 && params2.method);
 
     return {
@@ -229,11 +205,7 @@ export class HttpClient<SecurityDataType = unknown> {
       ...params1,
       ...(params2 || {}),
       headers: {
-        ...((method &&
-          this.instance.defaults.headers[
-            method.toLowerCase() as keyof HeadersDefaults
-          ]) ||
-          {}),
+        ...((method && this.instance.defaults.headers[method.toLowerCase() as keyof HeadersDefaults]) || {}),
         ...(params1.headers || {}),
         ...((params2 && params2.headers) || {}),
       },
@@ -241,7 +213,7 @@ export class HttpClient<SecurityDataType = unknown> {
   }
 
   protected stringifyFormItem(formItem: unknown) {
-    if (typeof formItem === 'object' && formItem !== null) {
+    if (typeof formItem === "object" && formItem !== null) {
       return JSON.stringify(formItem);
     } else {
       return `${formItem}`;
@@ -254,15 +226,11 @@ export class HttpClient<SecurityDataType = unknown> {
     }
     return Object.keys(input || {}).reduce((formData, key) => {
       const property = input[key];
-      const propertyContent: any[] =
-        property instanceof Array ? property : [property];
+      const propertyContent: any[] = property instanceof Array ? property : [property];
 
       for (const formItem of propertyContent) {
         const isFileType = formItem instanceof Blob || formItem instanceof File;
-        formData.append(
-          key,
-          isFileType ? formItem : this.stringifyFormItem(formItem)
-        );
+        formData.append(key, isFileType ? formItem : this.stringifyFormItem(formItem));
       }
 
       return formData;
@@ -279,28 +247,18 @@ export class HttpClient<SecurityDataType = unknown> {
     ...params
   }: FullRequestParams): Promise<AxiosResponse<T>> => {
     const secureParams =
-      ((typeof secure === 'boolean' ? secure : this.secure) &&
+      ((typeof secure === "boolean" ? secure : this.secure) &&
         this.securityWorker &&
         (await this.securityWorker(this.securityData))) ||
       {};
     const requestParams = this.mergeRequestParams(params, secureParams);
     const responseFormat = format || this.format || undefined;
 
-    if (
-      type === ContentType.FormData &&
-      body &&
-      body !== null &&
-      typeof body === 'object'
-    ) {
+    if (type === ContentType.FormData && body && body !== null && typeof body === "object") {
       body = this.createFormData(body as Record<string, unknown>);
     }
 
-    if (
-      type === ContentType.Text &&
-      body &&
-      body !== null &&
-      typeof body !== 'string'
-    ) {
+    if (type === ContentType.Text && body && body !== null && typeof body !== "string") {
       body = JSON.stringify(body);
     }
 
@@ -308,7 +266,7 @@ export class HttpClient<SecurityDataType = unknown> {
       ...requestParams,
       headers: {
         ...(requestParams.headers || {}),
-        ...(type ? { 'Content-Type': type } : {}),
+        ...(type ? { "Content-Type": type } : {}),
       },
       params: query,
       responseType: responseFormat,
@@ -324,9 +282,7 @@ export class HttpClient<SecurityDataType = unknown> {
  *
  * This API demonstrates how to define response types using response_model.
  */
-export class Api<
-  SecurityDataType extends unknown,
-> extends HttpClient<SecurityDataType> {
+export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDataType> {
   firebase = {
     /**
      * @description Add an User to Firestore.
@@ -341,10 +297,10 @@ export class Api<
     addUserFirebaseUserPost: (data: UserModel, params: RequestParams = {}) =>
       this.request<AddUserFirebaseUserPostData, AddUserFirebaseUserPostError>({
         path: `/firebase/User/`,
-        method: 'POST',
+        method: "POST",
         body: data,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -358,17 +314,11 @@ export class Api<
      * @response `200` `GetUserFirebaseUserUserIdGetData` Successful Response
      * @response `422` `HTTPValidationError` Validation Error
      */
-    getUserFirebaseUserUserIdGet: (
-      userId: string,
-      params: RequestParams = {}
-    ) =>
-      this.request<
-        GetUserFirebaseUserUserIdGetData,
-        GetUserFirebaseUserUserIdGetError
-      >({
+    getUserFirebaseUserUserIdGet: (userId: string, params: RequestParams = {}) =>
+      this.request<GetUserFirebaseUserUserIdGetData, GetUserFirebaseUserUserIdGetError>({
         path: `/firebase/User/${userId}`,
-        method: 'GET',
-        format: 'json',
+        method: "GET",
+        format: "json",
         ...params,
       }),
 
@@ -385,17 +335,14 @@ export class Api<
     updateUserFirebaseUserItemIdPut: (
       itemId: string,
       data: UpdateUserFirebaseUserItemIdPutPayload,
-      params: RequestParams = {}
+      params: RequestParams = {},
     ) =>
-      this.request<
-        UpdateUserFirebaseUserItemIdPutData,
-        UpdateUserFirebaseUserItemIdPutError
-      >({
+      this.request<UpdateUserFirebaseUserItemIdPutData, UpdateUserFirebaseUserItemIdPutError>({
         path: `/firebase/User/${itemId}`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -411,8 +358,8 @@ export class Api<
     getAllRoomsFirebaseRoomGet: (params: RequestParams = {}) =>
       this.request<GetAllRoomsFirebaseRoomGetData, any>({
         path: `/firebase/Room/`,
-        method: 'GET',
-        format: 'json',
+        method: "GET",
+        format: "json",
         ...params,
       }),
 
@@ -429,10 +376,10 @@ export class Api<
     addRoomFirebaseRoomPost: (data: RoomModel, params: RequestParams = {}) =>
       this.request<AddRoomFirebaseRoomPostData, AddRoomFirebaseRoomPostError>({
         path: `/firebase/Room/`,
-        method: 'POST',
+        method: "POST",
         body: data,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -446,17 +393,11 @@ export class Api<
      * @response `200` `StartGameFirebaseRoomRoomIdStartPutData` Successful Response
      * @response `422` `HTTPValidationError` Validation Error
      */
-    startGameFirebaseRoomRoomIdStartPut: (
-      roomId: string,
-      params: RequestParams = {}
-    ) =>
-      this.request<
-        StartGameFirebaseRoomRoomIdStartPutData,
-        StartGameFirebaseRoomRoomIdStartPutError
-      >({
+    startGameFirebaseRoomRoomIdStartPut: (roomId: string, params: RequestParams = {}) =>
+      this.request<StartGameFirebaseRoomRoomIdStartPutData, StartGameFirebaseRoomRoomIdStartPutError>({
         path: `/firebase/Room/${roomId}/start`,
-        method: 'PUT',
-        format: 'json',
+        method: "PUT",
+        format: "json",
         ...params,
       }),
 
@@ -470,17 +411,11 @@ export class Api<
      * @response `200` `EndGameFirebaseRoomRoomIdEndPutData` Successful Response
      * @response `422` `HTTPValidationError` Validation Error
      */
-    endGameFirebaseRoomRoomIdEndPut: (
-      roomId: string,
-      params: RequestParams = {}
-    ) =>
-      this.request<
-        EndGameFirebaseRoomRoomIdEndPutData,
-        EndGameFirebaseRoomRoomIdEndPutError
-      >({
+    endGameFirebaseRoomRoomIdEndPut: (roomId: string, params: RequestParams = {}) =>
+      this.request<EndGameFirebaseRoomRoomIdEndPutData, EndGameFirebaseRoomRoomIdEndPutError>({
         path: `/firebase/Room/${roomId}/end`,
-        method: 'PUT',
-        format: 'json',
+        method: "PUT",
+        format: "json",
         ...params,
       }),
 
@@ -500,16 +435,13 @@ export class Api<
         /** User Id */
         user_id: string;
       },
-      params: RequestParams = {}
+      params: RequestParams = {},
     ) =>
-      this.request<
-        LeaveRoomFirebaseRoomRoomIdLeavePutData,
-        LeaveRoomFirebaseRoomRoomIdLeavePutError
-      >({
+      this.request<LeaveRoomFirebaseRoomRoomIdLeavePutData, LeaveRoomFirebaseRoomRoomIdLeavePutError>({
         path: `/firebase/Room/${roomId}/leave`,
-        method: 'PUT',
+        method: "PUT",
         query: query,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -529,16 +461,13 @@ export class Api<
         /** User Id */
         user_id: string;
       },
-      params: RequestParams = {}
+      params: RequestParams = {},
     ) =>
-      this.request<
-        JoinRoomFirebaseRoomRoomIdJoinPutData,
-        JoinRoomFirebaseRoomRoomIdJoinPutError
-      >({
+      this.request<JoinRoomFirebaseRoomRoomIdJoinPutData, JoinRoomFirebaseRoomRoomIdJoinPutError>({
         path: `/firebase/Room/${roomId}/join`,
-        method: 'PUT',
+        method: "PUT",
         query: query,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -552,20 +481,13 @@ export class Api<
      * @response `200` `AddChatMessageFirebaseChatChatIdAddPutData` Successful Response
      * @response `422` `HTTPValidationError` Validation Error
      */
-    addChatMessageFirebaseChatChatIdAddPut: (
-      chatId: string,
-      data: AddChatRequest,
-      params: RequestParams = {}
-    ) =>
-      this.request<
-        AddChatMessageFirebaseChatChatIdAddPutData,
-        AddChatMessageFirebaseChatChatIdAddPutError
-      >({
+    addChatMessageFirebaseChatChatIdAddPut: (chatId: string, data: AddChatRequest, params: RequestParams = {}) =>
+      this.request<AddChatMessageFirebaseChatChatIdAddPutData, AddChatMessageFirebaseChatChatIdAddPutError>({
         path: `/firebase/Chat/${chatId}/add`,
-        method: 'PUT',
+        method: "PUT",
         body: data,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -579,19 +501,13 @@ export class Api<
      * @response `200` `AddItemToRealtimeFirebaseRealtimeItemsPostData` Successful Response
      * @response `422` `HTTPValidationError` Validation Error
      */
-    addItemToRealtimeFirebaseRealtimeItemsPost: (
-      data: Item,
-      params: RequestParams = {}
-    ) =>
-      this.request<
-        AddItemToRealtimeFirebaseRealtimeItemsPostData,
-        AddItemToRealtimeFirebaseRealtimeItemsPostError
-      >({
+    addItemToRealtimeFirebaseRealtimeItemsPost: (data: Item, params: RequestParams = {}) =>
+      this.request<AddItemToRealtimeFirebaseRealtimeItemsPostData, AddItemToRealtimeFirebaseRealtimeItemsPostError>({
         path: `/firebase/realtime/items/`,
-        method: 'POST',
+        method: "POST",
         body: data,
         type: ContentType.Json,
-        format: 'json',
+        format: "json",
         ...params,
       }),
 
@@ -605,17 +521,14 @@ export class Api<
      * @response `200` `GetItemFromRealtimeFirebaseRealtimeItemsItemIdGetData` Successful Response
      * @response `422` `HTTPValidationError` Validation Error
      */
-    getItemFromRealtimeFirebaseRealtimeItemsItemIdGet: (
-      itemId: string,
-      params: RequestParams = {}
-    ) =>
+    getItemFromRealtimeFirebaseRealtimeItemsItemIdGet: (itemId: string, params: RequestParams = {}) =>
       this.request<
         GetItemFromRealtimeFirebaseRealtimeItemsItemIdGetData,
         GetItemFromRealtimeFirebaseRealtimeItemsItemIdGetError
       >({
         path: `/firebase/realtime/items/${itemId}`,
-        method: 'GET',
-        format: 'json',
+        method: "GET",
+        format: "json",
         ...params,
       }),
   };
