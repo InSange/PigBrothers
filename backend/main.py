@@ -4,11 +4,20 @@ from firebase_config import realtime_db
 from pydantic import BaseModel
 from typing import List
 from datetime import datetime
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="My API with Response Models",
     description="This API demonstrates how to define response types using response_model.",
     version="1.0.0"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class Item(BaseModel):
