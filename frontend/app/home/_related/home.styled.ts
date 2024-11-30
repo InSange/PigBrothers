@@ -11,11 +11,13 @@ export const HomeContentContainer = styled(ContentContainer)`
   justify-content: center;
   align-items: center;
   gap: 24px;
-  margin: 0 auto;
+  margin-top: 20vh;
+  padding-inline: 32px;
 `;
 
 export const Carousel = styled.div`
   width: 100%;
-  height: 60%;
+  height: 40vh;
+  flex-shrink: 0;
   background-color: #fff;
 `;
