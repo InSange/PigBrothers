@@ -7,7 +7,7 @@ import { enqueueSnackbar } from 'notistack';
 import { useContext, useState } from 'react';
 
 const NameInput = () => {
-  const { user, handleChangeUser: handleChangeName } =
+  const { userId: user, handleChangeUser: handleChangeName } =
     useContext(GlobalContext);
   const { mutateAsync: addUser } = useAddUserFirebaseUserPost();
   const router = useRouter();
@@ -24,7 +24,7 @@ const NameInput = () => {
     addUser({
       data: { Name: name, RoomID: '', UserID: newId },
     }).then(() => {
-      handleChangeName({ id: newId, name });
+      handleChangeName(newId);
       router.push('/room');
     });
   };

@@ -20,11 +20,10 @@ import { useContext, useState } from 'react';
 import { CreateRoomButtonContainer } from '../_related/room.styled';
 
 const CreateRoomButton = () => {
-  const { user } = useContext(GlobalContext);
+  const { userId } = useContext(GlobalContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const router = useRouter();
   const { mutateAsync: addRoom } = useAddRoomFirebaseRoomPost();
-  const userId = user?.id;
   const [roomName, setRoomName] = useState('');
 
   const handleOpenModal = () => {
@@ -36,7 +35,7 @@ const CreateRoomButton = () => {
   };
 
   const handleConfirmAction = () => {
-    if (!user || !userId) {
+    if (!userId) {
       enqueueSnackbar({ variant: 'error', message: '유저 정보가 없습니다.' });
       return router.push('/home');
     }

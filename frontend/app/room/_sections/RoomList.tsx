@@ -1,34 +1,54 @@
 'use client';
 
 import Button from '@/app/_components/Button';
+import { useJoinRoomFirebaseRoomRoomIdJoinPut } from '@/app/api/room/hooks/useMutationSession';
+import { GlobalContext } from '@/app/GlobalContext';
+import { RoomModel } from '@/types/Api';
 import { useRouter } from 'next/navigation';
+import { enqueueSnackbar } from 'notistack';
+import { useContext } from 'react';
 import {
   PersonCount,
   PersonCountContainer,
   RoomLeftContainer,
   RoomListStyled,
-  RoomNumber,
   RoomRightContainer,
   RoomTitle,
 } from '../_related/room.styled';
 
-const RoomList = ({ room }: { room: any }) => {
+const RoomList = ({ room }: { room: RoomModel }) => {
+  const { userId } = useContext(GlobalContext);
   const router = useRouter();
+  const { mutateAsync: joinRoom } = useJoinRoomFirebaseRoomRoomIdJoinPut();
+
+  if (!room) return;
+
   const handleJoinRoom = () => {
-    router.push('/room/1');
+    if (!userId) {
+      enqueueSnackbar({ variant: 'error', message: '유저 정보가 없습니다.' });
+      return router.push('/home');
+    }
+
+    joinRoom({
+      query: {
+        user_id: userId,
+      },
+      roomId: room.RoomID,
+    }).then(() => {
+      router.push(`/room/${room.RoomID}`);
+    });
   };
 
   return (
     <RoomListStyled>
       <RoomLeftContainer>
-        <RoomNumber>{room.id}.</RoomNumber>
-        <RoomTitle>{room.name}</RoomTitle>
+        <RoomTitle>{room.Name}</RoomTitle>
       </RoomLeftContainer>
       <RoomRightContainer>
         <PersonCountContainer>
           <PersonCount>3</PersonCount>
           <PersonCount>/</PersonCount>
-          <PersonCount>3</PersonCount>
+          <PersonCount>{room.MaxUser}</PersonCount>
         </PersonCountContainer>
         <Button size='small' onClick={handleJoinRoom}>
           참가
