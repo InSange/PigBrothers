@@ -46,7 +46,7 @@ const RoomList = ({ room }: { room: RoomModel }) => {
       </RoomLeftContainer>
       <RoomRightContainer>
         <PersonCountContainer>
-          <PersonCount>3</PersonCount>
+          <PersonCount>{room.UserList?.length ?? 0}</PersonCount>
           <PersonCount>/</PersonCount>
           <PersonCount>{room.MaxUser}</PersonCount>
         </PersonCountContainer>
