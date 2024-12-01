@@ -107,12 +107,12 @@ export type UpdateUserFirebaseUserItemIdPutData = any;
 
 export type UpdateUserFirebaseUserItemIdPutError = HTTPValidationError;
 
-/** Response Get All Rooms Firebase Room  Get */
-export type GetAllRoomsFirebaseRoomGetData = RoomModel[];
-
 export type AddRoomFirebaseRoomPostData = RoomModel;
 
 export type AddRoomFirebaseRoomPostError = HTTPValidationError;
+
+/** Response Get All Rooms Firebase Room  Get */
+export type GetAllRoomsFirebaseRoomGetData = RoomModel[];
 
 export type StartGameFirebaseRoomRoomIdStartPutData = any;
 
@@ -347,6 +347,35 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       }),
 
     /**
+     * @description Create a new game room and set the creator as the Room Host.
+     *
+     * @tags Room
+     * @name AddRoomFirebaseRoomPost
+     * @summary Create a Game Room
+     * @request POST:/firebase/Room/
+     * @response `200` `AddRoomFirebaseRoomPostData` Successful Response
+     * @response `422` `HTTPValidationError` Validation Error
+     */
+    addRoomFirebaseRoomPost: (
+      query: {
+        /** Room Name */
+        room_name: string;
+        /** Room Id */
+        room_id: string;
+        /** User Id */
+        user_id: string;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<AddRoomFirebaseRoomPostData, AddRoomFirebaseRoomPostError>({
+        path: `/firebase/Room/`,
+        method: "POST",
+        query: query,
+        format: "json",
+        ...params,
+      }),
+
+    /**
      * @description Retrieve all game rooms from Firestore.
      *
      * @tags Room
@@ -359,26 +388,6 @@ export class Api<SecurityDataType extends unknown> extends HttpClient<SecurityDa
       this.request<GetAllRoomsFirebaseRoomGetData, any>({
         path: `/firebase/Room/`,
         method: "GET",
-        format: "json",
-        ...params,
-      }),
-
-    /**
-     * @description Create a new game room and set the creator as the Room Host.
-     *
-     * @tags Room
-     * @name AddRoomFirebaseRoomPost
-     * @summary Create a Game Room
-     * @request POST:/firebase/Room/
-     * @response `200` `AddRoomFirebaseRoomPostData` Successful Response
-     * @response `422` `HTTPValidationError` Validation Error
-     */
-    addRoomFirebaseRoomPost: (data: RoomModel, params: RequestParams = {}) =>
-      this.request<AddRoomFirebaseRoomPostData, AddRoomFirebaseRoomPostError>({
-        path: `/firebase/Room/`,
-        method: "POST",
-        body: data,
-        type: ContentType.Json,
         format: "json",
         ...params,
       }),

@@ -13,9 +13,9 @@ export async function getAllRoomsFirebaseRoomGet() {
 }
 
 export async function addRoomFirebaseRoomPost({
-  data,
+  query,
 }: ApiAddRoomFirebaseRoomPostParams) {
-  const response = await apiClient.firebase.addRoomFirebaseRoomPost(data);
+  const response = await apiClient.firebase.addRoomFirebaseRoomPost(query);
   return response.data;
 }
 

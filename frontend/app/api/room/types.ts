@@ -1,7 +1,9 @@
-import { RoomModel } from '@/types/Api';
-
 export type ApiAddRoomFirebaseRoomPostParams = {
-  data: RoomModel;
+  query: {
+    room_name: string;
+    room_id: string;
+    user_id: string;
+  };
 };
 
 export type ApiStartGameFirebaseRoomIdStartPutParams = {

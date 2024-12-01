@@ -1,4 +1,4 @@
-import { InputHTMLAttributes } from 'react';
+import { InputHTMLAttributes, memo } from 'react';
 import styled from 'styled-components';
 
 // Input 속성 타입 정의
@@ -7,9 +7,9 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 // Input 컴포넌트
-const Textfield = ({ ...rest }: InputProps) => {
+const Textfield = memo(({ ...rest }: InputProps) => {
   return <InputStyled {...rest} />;
-};
+});
 
 export default Textfield;
 
@@ -24,7 +24,9 @@ const InputStyled = styled.input<{ error?: boolean }>`
   outline: none;
   background-color: #fff;
   color: #000;
-  transition: border-color 0.3s, box-shadow 0.3s;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
 
   // 기본 상태
   &:focus {

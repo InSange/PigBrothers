@@ -2,22 +2,21 @@
 import { createContext, PropsWithChildren, useMemo, useState } from 'react';
 
 type ContextType = {
-  name?: string;
-  handleChangeName: (name: string) => void;
+  user?: { id: string; name: string };
+  handleChangeUser: (name: ContextType['user']) => void;
 };
 export const GlobalContext = createContext<ContextType>({
-  name: '',
-  handleChangeName: (_: string) => {},
+  handleChangeUser: (_: ContextType['user']) => {},
 });
 
 export const GlobalContextProvider = ({ children }: PropsWithChildren) => {
-  const [name, setName] = useState<ContextType['name']>('');
+  const [user, setUser] = useState<ContextType['user']>();
 
-  const handleChangeName = (name: string) => {
-    setName(name);
+  const handleChangeUser = (user: ContextType['user']) => {
+    setUser(user);
   };
 
-  const contextValue = useMemo(() => ({ name, handleChangeName }), [name]);
+  const contextValue = useMemo(() => ({ user, handleChangeUser }), [user]);
 
   return (
     <GlobalContext.Provider value={contextValue}>

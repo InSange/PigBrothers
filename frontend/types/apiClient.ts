@@ -4,7 +4,8 @@ import { Api } from './Api';
 
 type CustomHeader = { Authorization: string | undefined | null };
 export const apiClient = new Api<CustomHeader>({
-  baseURL: `${(process.env['NEXT_PUBLIC_BASE_PATH'] ?? '') + '/services'}`,
+  baseURL: 'http://13.125.139.238:8000/',
+  // baseURL: 'http://localhost:8000/',
 });
 
 apiClient.instance.interceptors.request.use(async (config) => {
