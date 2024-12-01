@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getItemFromRealtimeFirebaseRealtimeItemsItemIdGet } from '../firebase.api';
 import { ApiGetItemFromRealtimeFirebaseRealtimeItemsItemIdGetParams } from '../types';
 
-export function useGetAllRoomsFirebaseRoomGet({
+export function useGetItemFromRealtimeFirebaseRealtimeItemsItemIdGet({
   itemId,
 }: ApiGetItemFromRealtimeFirebaseRealtimeItemsItemIdGetParams) {
   return useQuery({
