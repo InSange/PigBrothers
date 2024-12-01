@@ -1,32 +1,44 @@
+import { GlobalContext } from '@/app/GlobalContext';
+import { useContext, useEffect, useRef } from 'react';
+import { ChatContext } from '../_related/ChatProvider';
 import {
-  Chat,
-  ChatImage,
-  ChatInfoContainer,
-  ChatName,
   ChattingContainer,
   ChattingContainerTitle,
-  MyChatBubble,
-  UserChatBubble,
 } from '../_related/session.styled';
+import MyChat from './MyChat';
+import OtherUserChat from './OtherUserChat';
 
 const Chatting = () => {
+  const { messages } = useContext(ChatContext);
+  const { userId } = useContext(GlobalContext);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 새로운 메시지가 추가되면 스크롤을 최신 메시지로 이동
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  if (!messages) {
+    throw new Error('ChatMessageList must be used within a ChatProvider');
+  }
+
   return (
     <ChattingContainer>
       <ChattingContainerTitle>채팅창</ChattingContainerTitle>
-      <UserChatBubble>
-        <ChatImage src={'/pig.svg'} />
-        <ChatInfoContainer>
-          <ChatName>유저 이름</ChatName>
-          <Chat>상대방 채팅</Chat>
-        </ChatInfoContainer>
-      </UserChatBubble>
-      <MyChatBubble>
-        <ChatImage src={'/pig.svg'} />
-        <ChatInfoContainer>
-          <ChatName>내 이름</ChatName>
-          <Chat>내 채팅</Chat>
-        </ChatInfoContainer>
-      </MyChatBubble>
+      {messages?.map((message, i) => {
+        console.log(message);
+        const isMe = message.sender === userId;
+        return (
+          <div key={i}>
+            {isMe ? (
+              <MyChat message={message} />
+            ) : (
+              <OtherUserChat message={message} />
+            )}
+          </div>
+        );
+      })}
+      <div ref={messagesEndRef} />
     </ChattingContainer>
   );
 };

@@ -19,7 +19,7 @@ export const UserCard = styled.div`
 
 export const ChattingContainer = styled.div`
   padding: 12px;
-  background-color: #FFF0F0;
+  background-color: #fff0f0;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -27,19 +27,20 @@ export const ChattingContainer = styled.div`
 
 export const ChattingContainerTitle = styled.div`
   color: #000;
-  font-weight: bold
-`
+  font-weight: bold;
+`;
 
 export const ChatBubble = styled.div`
   border-radius: 16px;
-  border: ${({theme}) => `1px solid ${theme.colors.primary}`};
+  border: ${({ theme }) => `1px solid ${theme.colors.primary}`};
   width: fit-content;
   display: flex;
   align-items: center;
   gap: 8px;
 `;
 export const UserChatBubble = styled(ChatBubble)`
-  padding: 8px 8px;`;
+  padding: 8px 8px;
+`;
 export const MyChatBubble = styled(ChatBubble)`
   margin-left: auto;
   padding: 8px;
@@ -52,13 +53,13 @@ export const ChatName = styled.div`
   font-weight: bold;
   font-size: 14px;
   color: #000;
-  `;
+`;
 export const ChatImage = styled.img`
   width: 32px;
   height: 32px;
   border-radius: 99999999px;
 `;
-export const Chat = styled.div`
-  font-size: 14px; 
+export const ChatContent = styled.div`
+  font-size: 14px;
   color: #000;
-  `;
+`;
