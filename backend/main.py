@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from firebase_config import firestore_client
 from firebase_config import realtime_db
 from pydantic import BaseModel
@@ -20,6 +20,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# WebSocket Check
+
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: List[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.active_connections.remove(websocket)
+
+    async def broadcast(self, message: str):
+        for connection in self.active_connections:
+            await connection.send_text(message)
+
+manager = ConnectionManager()
+
+@app.websocket("/ws/chat")
+async def websocket_endpoint(websocket: WebSocket):
+    await manager.connect(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await manager.broadcast(data)
+    except WebSocketDisconnect:
+        manager.disconnect(websocket)
+
+
+
 class Item(BaseModel):
     name: str
     price: float
@@ -40,7 +71,7 @@ class UserModel(BaseModel):
 """
 User API START
 """
-@app.post("/firebase/User/", tags=["User"], summary="Create an User", response_model=UserModel)
+@app.post("/firebase/User/", tags=["User"], summary="Create an User", response_model=UserModel, name='Add User')
 async def add_user(data: UserModel):
     """
     Add an User to Firestore.
@@ -60,7 +91,7 @@ async def add_user(data: UserModel):
     return {"message": "Item added successfully", "id": doc_ref.id, **data.dict()}
 
 # Firestore에서 데이터 조회
-@app.get("/firebase/User/{user_id}", tags=["User"], summary="Get User by UserID", response_model=UserModel)
+@app.get("/firebase/User/{user_id}", tags=["User"], summary="Get User by UserID", response_model=UserModel, name='Add User')
 async def get_user(user_id: str):
     """
     Retrieve an User from Firestore by ID.
@@ -109,7 +140,7 @@ class RoomModel(BaseModel):
     RoomState: bool = False # 방 상태 (True: 게임 시작, False: 게임 대기)
     RoomHostID: str # 방장 (맨 처음 생성한 유저 ID)
     UserList: List[str] = []# 유저 리스트 (UserID 배열)
-    ChatID: str = None # 방 생성 시 ChatID를 저장
+    SessionID: str = None # 방 생성 시 ChatID를 저장
 """
 Room API START
 """
@@ -131,15 +162,13 @@ async def add_room(room_name: str, room_id: str, user_id: str):
             raise HTTPException(status_code=400, detail=f"Room with ID '{room_id}' already exists")
 
         # Chat 문서 생성 (방에서 사용할 채팅 내역)
-        chat_ref = firestore_client.collection("Chat").document()
-        chat_id = chat_ref.id # 파이어스토에서 자동 생성한 ID값
+        session_ref = firestore_client.collection("Session").document(room_id)
+        session_id = room_id
 
         chat_data = {
-            "ChatID": chat_id, # 채팅 자료 ID
-            "RoomID": room_id, # 방 ID
             "Messages": [], # 메시지 배열
         }
-        chat_ref.set(chat_data)
+        session_ref.set(chat_data)
 
         # 초기화 값 설정
         room_data = {
@@ -149,7 +178,6 @@ async def add_room(room_name: str, room_id: str, user_id: str):
             "RoomState": False,  # 항상 False로 초기화
             "RoomHostID": user_id,
             "UserList": [user_id],  # 방장이 UserList에 자동으로 추가
-            "ChatID": chat_id,
         }
 
         # Firestore에 저장
@@ -198,22 +226,17 @@ async def start_game(room_id: str):
         room_data["RoomState"] = True
         room_ref.update({"RoomState": True})
 
-        # ChatID 가져오기
-        chat_id = room_data.get("ChatID")
-        if not chat_id:
-            raise HTTPException(status_code=404, detail=f"Chat not found for Room '{room_id}'")
+        # Firestore에서 Session 문서 가져오기
+        session_ref = firestore_client.collection("Chat").document(room_id)
+        session_doc = session_ref.get()
 
-        # Firestore에서 Chat 문서 가져오기
-        chat_ref = firestore_client.collection("Chat").document(chat_id)
-        chat_doc = chat_ref.get()
-
-        if not chat_doc.exists:
-            raise HTTPException(status_code=404, detail=f"Chat with ID '{chat_id}' not found")
+        if not session_doc.exists:
+            raise HTTPException(status_code=404, detail=f"session with ID '{room_id}' not found")
 
         # 채팅 초기화 (Messages 배열 비우기)
-        chat_ref.update({"Messages": []})
+        session_ref.update({"Messages": []})
 
-        return {"message": f"Game started for Room '{room_id}', chat has been reset"}
+        return {"message": f"Game started for Room '{room_id}', session has been reset"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -236,22 +259,17 @@ async def end_game(room_id: str):
         room_data["RoomState"] = False
         room_ref.update({"RoomState": False})
 
-        # ChatID 가져오기
-        chat_id = room_data.get("ChatID")
-        if not chat_id:
-            raise HTTPException(status_code=404, detail=f"Chat not found for Room '{room_id}'")
+        # Firestore에서 Session 문서 가져오기
+        session_ref = firestore_client.collection("Chat").document(room_id)
+        session_doc = session_ref.get()
 
-        # Firestore에서 Chat 문서 가져오기
-        chat_ref = firestore_client.collection("Chat").document(chat_id)
-        chat_doc = chat_ref.get()
-
-        if not chat_doc.exists:
-            raise HTTPException(status_code=404, detail=f"Chat with ID '{chat_id}' not found")
+        if not session_doc.exists:
+            raise HTTPException(status_code=404, detail=f"session with ID '{room_id}' not found")
 
         # 채팅 초기화 (Messages 배열 비우기)
-        chat_ref.update({"Messages": []})
+        session_ref.update({"Messages": []})
 
-        return {"message": f"Game ended for Room '{room_id}', chat has been reset"}
+        return {"message": f"Game ended for Room '{room_id}', session has been reset"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -293,11 +311,11 @@ async def leave_room(room_id: str, user_id: str):
         # 방이 비어 있는 경우 Firestore에서 문서 삭제
         if not user_list:
             room_data = room_doc.to_dict()
-            chat_id = room_data.get("ChatID")
+            room_id = room_data.get("RoomID")
             doc_ref.delete() # 방 삭제
-            if chat_id: # 채팅 컬렉션도 삭제
-                chat_ref = firestore_client.collection("Chat").document(chat_id)
-                chat_ref.delete()
+            if room_id: # 채팅 컬렉션도 삭제
+                session_ref = firestore_client.collection("Session").document(room_id)
+                session_ref.delete()
             return {"message": f"Room '{room_id}' has been deleted as it is empty"}
 
         # 업데이트된 UserList 저장
@@ -352,52 +370,51 @@ async def join_room(room_id: str, user_id: str):
 """
 Room API END
 """
-class ChatMessage(BaseModel):
-    Message: str
+class ChatInfo(BaseModel):
+    ChatID: str
+    Text: str
     UserID: str
+    UserName: str
     Time: datetime
 
-class AddChatRequest(BaseModel):
-    RoomID: str
-    ChatMessage: ChatMessage
+class AddSessionRequest(BaseModel):
+    ChatMessage: ChatInfo
 
 MAX_MESSAGES = 10  # 최대 메시지 수 제한
 """
-Chat API START
+Session API START
 """
-@app.put("/firebase/Chat/{chat_id}/add", tags=["Firebase"], summary="Add a Chat Message with FIFO")
-async def add_chat_message(chat_id: str, chat_request: AddChatRequest):
+@app.put("/firebase/Session/{room_id}/add", tags=["Session"], summary="Add a Chat Message with FIFO")
+async def add_chat_message(room_id: str, session_request: AddSessionRequest):
     """
     Add a chat message to the Chat collection, maintaining a maximum of 10 messages (FIFO).
     """
     try:
         # Firestore에서 ChatID 문서 가져오기
-        doc_ref = firestore_client.collection("Chat").document(chat_id)
-        chat_doc = doc_ref.get()
+        doc_ref = firestore_client.collection("Session").document(room_id)
+        session_doc = doc_ref.get()
 
-        if not chat_doc.exists:
+        if not session_doc.exists:
             # 채팅 문서가 없으면 새로 생성
-            chat_data = {
-                "ChatID": chat_id,
-                "RoomID": chat_request.RoomID,
-                "Messages": [chat_request.ChatMessage.dict()],
+            session_data = {
+                "Messages": [session_request.ChatMessage.dict()],
             }
-            doc_ref.set(chat_data)
+            doc_ref.set(session_data)
         else:
             # 기존 문서에서 메시지 가져오기
-            chat_data = chat_doc.to_dict()
-            messages = chat_data.get("Messages", [])
+            session_data = session_doc.to_dict()
+            messages = session_data.get("Messages", [])
 
             # FIFO 방식으로 메시지 추가
             if len(messages) >= MAX_MESSAGES:
                 messages.pop(0)  # 가장 오래된 메시지 제거 (첫 번째 메시지)
-            messages.append(chat_request.ChatMessage.dict())  # 새로운 메시지 추가
+            messages.append(session_request.ChatMessage.dict())  # 새로운 메시지 추가
 
             # Firestore에 업데이트
-            chat_data["Messages"] = messages
+            session_data["Messages"] = messages
             doc_ref.update({"Messages": messages})
 
-        return {"message": "Chat message added successfully", "chat_id": chat_id}
+        return {"message": "Session message added successfully", "session_id": room_id}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
