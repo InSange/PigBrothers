@@ -10,7 +10,7 @@ import {
 const OtherUserChat = ({ message }: { message: Message }) => {
   return (
     <UserChatBubble>
-      <ChatImage src={'/pig.svg'} />
+      <ChatImage src={'/pig.png'} />
       <ChatInfoContainer>
         <ChatName>유저 이름</ChatName>
         <ChatContent>상대방 채팅</ChatContent>

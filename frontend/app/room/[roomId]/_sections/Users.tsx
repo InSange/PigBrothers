@@ -4,15 +4,15 @@ import User from './User';
 
 const Users = () => {
   return (
-    <div>
-      <AlignCenterRowStack>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <AlignCenterRowStack style={{ gap: '8px' }}>
         <User />
         <User />
         <User />
         <User />
         <User />
       </AlignCenterRowStack>
-      <AlignCenterRowStack>
+      <AlignCenterRowStack style={{ gap: '8px' }}>
         <User />
         <User />
         <User />

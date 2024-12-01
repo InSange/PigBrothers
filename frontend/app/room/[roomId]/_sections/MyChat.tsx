@@ -10,7 +10,7 @@ import {
 const MyChat = ({ message }: { message: Message }) => {
   return (
     <MyChatBubble>
-      <ChatImage src={'/pig.svg'} />
+      <ChatImage src={'/pig.png'} />
       <ChatInfoContainer>
         <ChatName>내 이름</ChatName>
         <ChatContent>내 채팅</ChatContent>

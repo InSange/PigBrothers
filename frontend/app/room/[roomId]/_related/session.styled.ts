@@ -12,9 +12,26 @@ export const UserCard = styled.div`
   flex: 1;
   justify-content: center;
   align-items: center;
-  height: 200px;
-  background-color: #c3f0f0;
+  display: flex;
+  flex-direction: column;
   cursor: pointer;
+  height: 10vh;
+  gap: 8px;
+  min-height: 80px;
+`;
+
+export const UserName = styled.div`
+  font-size: 16px;
+  color: #000;
+`;
+
+export const UserImage = styled.img`
+  width: 80%;
+  height: 8vh;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 999999px;
+  min-height: 70px;
 `;
 
 export const ChattingContainer = styled.div`
