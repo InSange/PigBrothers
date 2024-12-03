@@ -96,9 +96,11 @@ async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str
     try:
         # Firestore에서 방 중복 확인
         room_ref = firestore_client.collection("Room").document(room_id)
+        """
         if room_ref.get().exists:
             await websocket.close(code=4000, reason="Room ID already exists.")
             return
+        """
 
         # 방 생성 및 Firestore에 저장
         room_data = {
