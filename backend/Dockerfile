@@ -9,7 +9,7 @@ COPY requirements.txt requirements.txt
 
 # 패키지 설치
 RUN pip install --no-cache-dir -r requirements.txt
-Run pip install gunicorn
+RUN pip install gunicorn
 COPY . .
 
 # Flask 애플리케이션 실행
