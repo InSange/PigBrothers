@@ -88,7 +88,7 @@ class RoomManager:
 room_manager = RoomManager()
 
 # WebSocket: 방 생성 및 연결 처리
-@app.websocket("/ws/create/{room_id}/{user_id}")
+@app.websocket("/ws/create/{room_id}/{user_id}/{room_name}")
 async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str, room_name: str = None):
     """
     방 생성 및 웹소켓 연결 처리.
@@ -96,16 +96,15 @@ async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str
     try:
         # Firestore에서 방 중복 확인
         room_ref = firestore_client.collection("Room").document(room_id)
-        """
+
         if room_ref.get().exists:
             await websocket.close(code=4000, reason="Room ID already exists.")
             return
-        """
 
         # 방 생성 및 Firestore에 저장
         room_data = {
             "MaxUser": 8,
-            "Name": room_name or f"Room-{room_id}",
+            "Name": room_name,
             "RoomID": room_id,
             "RoomState": False,
             "RoomHostID": user_id,
@@ -116,6 +115,12 @@ async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str
         # 웹소켓 연결 처리
         room = room_manager.get_room(room_id)
         await room.connect(websocket, user_id)
+
+        # 방 정보를 클라이언트로 전송
+        await websocket.send_text(json.dumps({
+            "type": "room_info",
+            "data": room_data
+        }))
 
         # 메시지 브로드캐스트
         await room.broadcast(f"{user_id} created and joined the room '{room_id}'.")
@@ -244,49 +249,6 @@ class RoomModel(BaseModel):
 """
 Room API START
 """
-@app.post("/firebase/Room/", tags=["Room"], summary="Create a Game Room", response_model=RoomModel)
-async def add_room(room_name: str, room_id: str, user_id: str):
-    """
-    Create a new game room and set the creator as the Room Host.
-    """
-    # Check essential field
-    if not room_name:
-        raise HTTPException(status_code=400, detail="Room Name cannot be empty")
-    if not room_id:
-        raise HTTPException(status_code=400, detail="Room ID cannot be empty")
-
-    try:
-        # RoomID 중복 여부 확인
-        room_query = firestore_client.collection("Room").document(room_id).get()
-        if room_query.exists:
-            raise HTTPException(status_code=400, detail=f"Room with ID '{room_id}' already exists")
-
-        # Chat 문서 생성 (방에서 사용할 채팅 내역)
-        session_ref = firestore_client.collection("Session").document(room_id)
-        session_id = room_id
-
-        chat_data = {
-            "Messages": [], # 메시지 배열
-        }
-        session_ref.set(chat_data)
-
-        # 초기화 값 설정
-        room_data = {
-            "MaxUser": 8,
-            "Name": room_name,
-            "RoomID": room_id,
-            "RoomState": False,  # 항상 False로 초기화
-            "RoomHostID": user_id,
-            "UserList": [user_id],  # 방장이 UserList에 자동으로 추가
-        }
-
-        # Firestore에 저장
-        firestore_client.collection("Room").document(room_id).set(room_data)
-
-        return room_data  # 성공적으로 생성된 방 데이터 반환
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-    
 # 방 상태 조회 API
 @app.get("/firebase/Room/{room_id}", tags=["Room"], summary="Get Current Rooms", response_model=List[RoomModel])
 async def get_room_status(room_id: str):
