@@ -11,6 +11,7 @@ import { GlobalContext } from '@/app/GlobalContext';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import { useContext, useEffect } from 'react';
+import { ChatProvider } from './_related/ChatProvider';
 import { SessionContentContainer } from './_related/session.styled';
 import Chatting from './_sections/Chatting';
 import ChattingInput from './_sections/ChattingInput';
@@ -60,15 +61,17 @@ const Page = () => {
   };
 
   return (
-    <Layout>
-      <PigHeader onClick={handleGotoBack} />
-      <SessionContentContainer>
-        <Users />
-        <Button onClick={handleStartGame}>게임 시작</Button>
-        <Chatting />
-        <ChattingInput />
-      </SessionContentContainer>
-    </Layout>
+    <ChatProvider>
+      <Layout>
+        <PigHeader onClick={handleGotoBack} />
+        <SessionContentContainer>
+          <Users />
+          <Button onClick={handleStartGame}>게임 시작</Button>
+          <Chatting />
+          <ChattingInput />
+        </SessionContentContainer>
+      </Layout>
+    </ChatProvider>
   );
 };
 

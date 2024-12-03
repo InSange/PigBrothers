@@ -4,7 +4,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "swagger": "swagger-typescript-api -p http://13.125.139.238:8000/openapi.json -r -o ./types -d --extract-request-body --extract-response-body --extract-response-error --axios"
+    "swagger": "swagger-typescript-api -p https://wam-coin.store/openapi.json -r -o ./types -d --extract-request-body --extract-response-body --extract-response-error --axios"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.61.0",

@@ -1,6 +1,6 @@
 'use client';
-import React, { useState } from 'react';
-import { UserCard } from '../_related/session.styled';
+import { useState } from 'react';
+import { UserCard, UserImage, UserName } from '../_related/session.styled';
 
 const User = () => {
   const [isLiarMemo, setIsLiarMemo] = useState(false);
@@ -11,9 +11,15 @@ const User = () => {
   return (
     <>
       {isLiarMemo ? (
-        <UserCard onClick={handleToggleMemo}>늑대</UserCard>
+        <UserCard onClick={handleToggleMemo}>
+          <UserImage src={'/wolf.png'} />
+          <UserName>늑대</UserName>
+        </UserCard>
       ) : (
-        <UserCard onClick={handleToggleMemo}>돼지</UserCard>
+        <UserCard onClick={handleToggleMemo}>
+          <UserImage src={'/pig.png'} />
+          <UserName>돼지</UserName>
+        </UserCard>
       )}
     </>
   );

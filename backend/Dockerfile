@@ -9,8 +9,9 @@ COPY requirements.txt requirements.txt
 
 # 패키지 설치
 RUN pip install --no-cache-dir -r requirements.txt
-Run pip install gunicorn
+RUN pip install gunicorn
 COPY . .
 
 # Flask 애플리케이션 실행
-CMD ["gunicorn", "-w", "4", "-k", "uvicorn.workers.UvicornWorker", "main:app", "--bind", "0.0.0.0:8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/etc/letsencrypt/live/wam-coin.store/privkey.pem", "--ssl-certfile", "/etc/letsencrypt/live/wam-coin.store/fullchain.pem"]
+
