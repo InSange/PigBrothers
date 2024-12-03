@@ -1,10 +1,16 @@
+# -*- coding: euc-kr -*-
+
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from firebase_config import firestore_client
 from firebase_config import realtime_db
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
+from collections import defaultdict
+
+import asyncio
+import json
 
 app = FastAPI(
     title="My API with Response Models",
@@ -22,34 +28,126 @@ app.add_middleware(
 
 # WebSocket Check
 
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: List[WebSocket] = []
+class Player:
+    def __init__(self, name: str):
+        self.name = name
+        self.is_alive = True # 생존 여부
+        self.vote_count = 0 # 투표 받은 횟수
 
-    async def connect(self, websocket: WebSocket):
+class Message:
+    sender: str # 송신자
+    text: str # 메시지 내용
+    type: str # 메시지 타입
+
+# 방 상태와 연결 관리
+class ConnectionManager:
+    def __init__(self, room_id: str):
+        self.room_id = room_id
+        self.active_connections: List[WebSocket] = [] # 웹 소켓 연결 목록
+        self.players: List[str] = [] # 연결된 유저 ID 목록
+        self.in_game = False  # 현재 상태 (False: 대기실, True: 게임 중)
+        self.current_speaker_index = 0 # 현재 발언 플레이어 인덱스
+
+    async def connect(self, websocket: WebSocket, user_id: str):
+        """웹소켓 연결 추가"""
         await websocket.accept()
         self.active_connections.append(websocket)
+        self.players.append(user_id)
 
-    def disconnect(self, websocket: WebSocket):
+    def disconnect(self, websocket: WebSocket, user_id: str):
+        """웹소켓 연결 제거"""
         self.active_connections.remove(websocket)
+        self.players.remove(user_id)
 
-    async def broadcast(self, message: str):
+    async def broadcast(self, message: Message):
+        """모든 연결에 메시지 전송"""
         for connection in self.active_connections:
             await connection.send_text(message)
 
-manager = ConnectionManager()
+    async def reset_votes(self):
+        for player in self.players:
+            player.vote_count = 0
 
-@app.websocket("/ws/chat")
-async def websocket_endpoint(websocket: WebSocket):
-    await manager.connect(websocket)
+# RoomManager: 방 관리
+class RoomManager:
+    def __init__(self):
+        self.rooms: Dict[str, ConnectionManager] = {} # 방 ID 별 ConnectionManager 관리
+
+    def get_room(self, room_id: str) -> ConnectionManager:
+        """방 가져오기, 없으면 새로 생성"""
+        if room_id not in self.rooms:
+            self.rooms[room_id] = ConnectionManager(room_id)
+        return self.rooms[room_id]
+    
+    def delete_room(self, room_id: str):
+        """방 삭제"""
+        if room_id in self.rooms:
+            del self.rooms[room_id]
+
+# 룸 매니저 전역 객체
+room_manager = RoomManager()
+
+# WebSocket: 방 생성 및 연결 처리
+@app.websocket("/ws/create/{room_id}/{user_id}")
+async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str, room_name: str = None):
+    """
+    방 생성 및 웹소켓 연결 처리.
+    """
     try:
+        # Firestore에서 방 중복 확인
+        room_ref = firestore_client.collection("Room").document(room_id)
+        if room_ref.get().exists:
+            await websocket.close(code=4000, reason="Room ID already exists.")
+            return
+
+        # 방 생성 및 Firestore에 저장
+        room_data = {
+            "MaxUser": 8,
+            "Name": room_name or f"Room-{room_id}",
+            "RoomID": room_id,
+            "RoomState": False,
+            "RoomHostID": user_id,
+            "UserList": [user_id],
+        }
+        room_ref.set(room_data)
+
+        # 웹소켓 연결 처리
+        room = room_manager.get_room(room_id)
+        await room.connect(websocket, user_id)
+
+        # 메시지 브로드캐스트
+        await room.broadcast(f"{user_id} created and joined the room '{room_id}'.")
+
         while True:
+            # 클라이언트로부터 메시지 수신
             data = await websocket.receive_text()
-            await manager.broadcast(data)
+            message = Message.parse_raw(data)
+
+            if message.type == "chat":
+                # 대기 상태에서만 채팅 허용
+                if not room.in_game:
+                    await room.broadcast_message(message)
+                else:
+                    await websocket.send_text("게임 중에는 채팅이 제한됩니다.")
+
+            elif message.type == "start_game":
+                # 게임 시작
+                if not room.in_game:
+                    room.in_game = True
+                    await room.broadcast("관리자: 게임이 시작되었습니다!")
+                    firestore_client.collection("Room").document(room_id).update({"RoomState": True})
+
+            elif message.type == "end_game":
+                # 게임 종료
+                room.in_game = False
+                await room.broadcast("관리자: 게임이 종료되었습니다!")
+                firestore_client.collection("Room").document(room_id).update({"RoomState": False})
+
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
-
-
+        # 연결 끊김 처리
+        room.disconnect(websocket, user_id)
+        if not room.active_connections:
+            room_manager.delete_room(room_id)
 
 class Item(BaseModel):
     name: str
@@ -186,6 +284,18 @@ async def add_room(room_name: str, room_id: str, user_id: str):
         return room_data  # 성공적으로 생성된 방 데이터 반환
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+# 방 상태 조회 API
+@app.get("/firebase/Room/{room_id}", tags=["Room"], summary="Get Current Rooms", response_model=List[RoomModel])
+async def get_room_status(room_id: str):
+    """
+    방 상태 조회.
+    """
+    room_ref = firestore_client.collection("Room").document(room_id)
+    room_doc = room_ref.get()
+    if not room_doc.exists:
+        raise HTTPException(status_code=404, detail="Room not found.")
+    return room_doc.to_dict()
 
 # Firestore에서 모든 방에 대한 정보를 가져오기
 @app.get("/firebase/Room/", tags=["Room"], summary="Get ALL Rooms", response_model=List[RoomModel])
@@ -350,7 +460,7 @@ async def join_room(room_id: str, user_id: str):
 
         # 이미 방에 있는 경우
         if user_id in user_list:
-            raise HTTPException(status_code=400, detail=f"User '{user_id}' is already in the room")
+            return {"message": f"User '{user_id}' has joined the room", "updated_room": room_data}
 
         # 방이 꽉 찬 경우
         if len(user_list) >= max_user:
