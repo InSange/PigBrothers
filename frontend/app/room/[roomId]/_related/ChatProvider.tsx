@@ -82,6 +82,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
       ws.onmessage = (event) => {
         const message: Message = JSON.parse(event.data);
+        console.log(message);
         setMessages((prev) => [...prev, message]);
       };
 
@@ -95,9 +96,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const sendMessage = ({ sender, text }: Message) => {
+  const sendMessage = ({ sender, text, type = 'chat' }: Message) => {
     if (socket && socket.readyState === WebSocket.OPEN) {
-      socket.send(JSON.stringify({ sender, text }));
+      socket.send(JSON.stringify({ sender, text, type }));
     }
   };
 

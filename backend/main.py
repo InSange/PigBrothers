@@ -1,16 +1,13 @@
-# -*- coding: euc-kr -*-
-
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from firebase_config import firestore_client
-from firebase_config import realtime_db
-from pydantic import BaseModel
-from typing import List, Dict
-from datetime import datetime
-from fastapi.middleware.cors import CORSMiddleware
-from collections import defaultdict
-
 import asyncio
 import json
+from collections import defaultdict
+from datetime import datetime
+from typing import Dict, List
+
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+from firebase_config import firestore_client, realtime_db
+from pydantic import BaseModel
 
 app = FastAPI(
     title="My API with Response Models",
@@ -31,36 +28,36 @@ app.add_middleware(
 class Player:
     def __init__(self, name: str):
         self.name = name
-        self.is_alive = True # »ýÁ¸ ¿©ºÎ
-        self.vote_count = 0 # ÅõÇ¥ ¹ÞÀº È½¼ö
+        self.is_alive = True # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+        self.vote_count = 0 # ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½ï¿½ È½ï¿½ï¿½
 
-class Message:
-    sender: str # ¼Û½ÅÀÚ
-    text: str # ¸Þ½ÃÁö ³»¿ë
-    type: str # ¸Þ½ÃÁö Å¸ÀÔ
+class Message(BaseModel):
+    sender: str # ï¿½Û½ï¿½ï¿½ï¿½
+    text: str # ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    type: str # ï¿½Þ½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½
 
-# ¹æ »óÅÂ¿Í ¿¬°á °ü¸®
+# ï¿½ï¿½ ï¿½ï¿½ï¿½Â¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 class ConnectionManager:
     def __init__(self, room_id: str):
         self.room_id = room_id
-        self.active_connections: List[WebSocket] = [] # À¥ ¼ÒÄÏ ¿¬°á ¸ñ·Ï
-        self.players: List[str] = [] # ¿¬°áµÈ À¯Àú ID ¸ñ·Ï
-        self.in_game = False  # ÇöÀç »óÅÂ (False: ´ë±â½Ç, True: °ÔÀÓ Áß)
-        self.current_speaker_index = 0 # ÇöÀç ¹ß¾ð ÇÃ·¹ÀÌ¾î ÀÎµ¦½º
+        self.active_connections: List[WebSocket] = [] # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+        self.players: List[str] = [] # ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ID ï¿½ï¿½ï¿½
+        self.in_game = False  # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (False: ï¿½ï¿½ï¿½ï¿½, True: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½)
+        self.current_speaker_index = 0 # ï¿½ï¿½ï¿½ï¿½ ï¿½ß¾ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ ï¿½Îµï¿½ï¿½ï¿½
 
     async def connect(self, websocket: WebSocket, user_id: str):
-        """À¥¼ÒÄÏ ¿¬°á Ãß°¡"""
+        """ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½"""
         await websocket.accept()
         self.active_connections.append(websocket)
         self.players.append(user_id)
 
     def disconnect(self, websocket: WebSocket, user_id: str):
-        """À¥¼ÒÄÏ ¿¬°á Á¦°Å"""
+        """ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½"""
         self.active_connections.remove(websocket)
         self.players.remove(user_id)
 
     async def broadcast(self, message: Message):
-        """¸ðµç ¿¬°á¿¡ ¸Þ½ÃÁö Àü¼Û"""
+        """ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½á¿¡ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½"""
         for connection in self.active_connections:
             await connection.send_text(message)
 
@@ -68,40 +65,40 @@ class ConnectionManager:
         for player in self.players:
             player.vote_count = 0
 
-# RoomManager: ¹æ °ü¸®
+# RoomManager: ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 class RoomManager:
     def __init__(self):
-        self.rooms: Dict[str, ConnectionManager] = {} # ¹æ ID º° ConnectionManager °ü¸®
+        self.rooms: Dict[str, ConnectionManager] = {} # ï¿½ï¿½ ID ï¿½ï¿½ ConnectionManager ï¿½ï¿½ï¿½ï¿½
 
     def get_room(self, room_id: str) -> ConnectionManager:
-        """¹æ °¡Á®¿À±â, ¾øÀ¸¸é »õ·Î »ý¼º"""
+        """ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½"""
         if room_id not in self.rooms:
             self.rooms[room_id] = ConnectionManager(room_id)
         return self.rooms[room_id]
     
     def delete_room(self, room_id: str):
-        """¹æ »èÁ¦"""
+        """ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½"""
         if room_id in self.rooms:
             del self.rooms[room_id]
 
-# ·ë ¸Å´ÏÀú Àü¿ª °´Ã¼
+# ï¿½ï¿½ ï¿½Å´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼
 room_manager = RoomManager()
 
-# WebSocket: ¹æ »ý¼º ¹× ¿¬°á Ã³¸®
+# WebSocket: ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
 @app.websocket("/ws/create/{room_id}/{user_id}/{room_name}")
 async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str, room_name: str = None):
     """
-    ¹æ »ý¼º ¹× À¥¼ÒÄÏ ¿¬°á Ã³¸®.
+    ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½.
     """
     try:
-        # Firestore¿¡¼­ ¹æ Áßº¹ È®ÀÎ
+        # Firestoreï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ßºï¿½ È®ï¿½ï¿½
         room_ref = firestore_client.collection("Room").document(room_id)
 
         if room_ref.get().exists:
             await websocket.close(code=4000, reason="Room ID already exists.")
             return
 
-        # ¹æ »ý¼º ¹× Firestore¿¡ ÀúÀå
+        # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Firestoreï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         room_data = {
             "MaxUser": 8,
             "Name": room_name,
@@ -112,46 +109,46 @@ async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str
         }
         room_ref.set(room_data)
 
-        # À¥¼ÒÄÏ ¿¬°á Ã³¸®
+        # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
         room = room_manager.get_room(room_id)
         await room.connect(websocket, user_id)
 
-        # ¹æ Á¤º¸¸¦ Å¬¶óÀÌ¾ðÆ®·Î Àü¼Û
+        # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         await websocket.send_text(json.dumps({
             "type": "room_info",
             "data": room_data
         }))
 
-        # ¸Þ½ÃÁö ºê·ÎµåÄ³½ºÆ®
+        # ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½Îµï¿½Ä³ï¿½ï¿½Æ®
         await room.broadcast(f"{user_id} created and joined the room '{room_id}'.")
 
         while True:
-            # Å¬¶óÀÌ¾ðÆ®·ÎºÎÅÍ ¸Þ½ÃÁö ¼ö½Å
+            # Å¬ï¿½ï¿½ï¿½Ì¾ï¿½Æ®ï¿½Îºï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             data = await websocket.receive_text()
-            message = Message.parse_raw(data)
+            message = Message.model_validate_json(data)
 
             if message.type == "chat":
-                # ´ë±â »óÅÂ¿¡¼­¸¸ Ã¤ÆÃ Çã¿ë
+                # ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Â¿ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¤ï¿½ï¿½ ï¿½ï¿½ï¿½
                 if not room.in_game:
-                    await room.broadcast_message(message)
+                    await room.broadcast(message)
                 else:
-                    await websocket.send_text("°ÔÀÓ Áß¿¡´Â Ã¤ÆÃÀÌ Á¦ÇÑµË´Ï´Ù.")
+                    await websocket.send_text("ï¿½ï¿½ï¿½ï¿½ ï¿½ß¿ï¿½ï¿½ï¿½ Ã¤ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ÑµË´Ï´ï¿½.")
 
             elif message.type == "start_game":
-                # °ÔÀÓ ½ÃÀÛ
+                # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 if not room.in_game:
                     room.in_game = True
-                    await room.broadcast("°ü¸®ÀÚ: °ÔÀÓÀÌ ½ÃÀÛµÇ¾ú½À´Ï´Ù!")
+                    await room.broadcast("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ÛµÇ¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½!")
                     firestore_client.collection("Room").document(room_id).update({"RoomState": True})
 
             elif message.type == "end_game":
-                # °ÔÀÓ Á¾·á
+                # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 room.in_game = False
-                await room.broadcast("°ü¸®ÀÚ: °ÔÀÓÀÌ Á¾·áµÇ¾ú½À´Ï´Ù!")
+                await room.broadcast("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½!")
                 firestore_client.collection("Room").document(room_id).update({"RoomState": False})
 
     except WebSocketDisconnect:
-        # ¿¬°á ²÷±è Ã³¸®
+        # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
         room.disconnect(websocket, user_id)
         if not room.active_connections:
             room_manager.delete_room(room_id)
@@ -172,7 +169,7 @@ class UserModel(BaseModel):
     RoomID: str
     UserID: str
 
-# Firestore¿¡ µ¥ÀÌÅÍ Ãß°¡
+# Firestoreï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
 """
 User API START
 """
@@ -195,27 +192,27 @@ async def add_user(data: UserModel):
     doc_ref.set(data.dict())
     return {"message": "Item added successfully", "id": doc_ref.id, **data.dict()}
 
-# Firestore¿¡¼­ µ¥ÀÌÅÍ Á¶È¸
+# Firestoreï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸
 @app.get("/firebase/User/{user_id}", tags=["User"], summary="Get User by UserID", response_model=UserModel, name='Add User')
 async def get_user(user_id: str):
     """
     Retrieve an User from Firestore by ID.
     """
     try:
-        # UserID¸¦ ±â¹ÝÀ¸·Î Firestore¿¡¼­ »ç¿ëÀÚ Á¶È¸
+        # UserIDï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Firestoreï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸
         user_query = firestore_client.collection("User").where("UserID", "==", user_id).stream()
 
-        # °á°ú Ã³¸®
+        # ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
         user_data = None
         for doc in user_query:
-            user_data = doc.to_dict()  # Ã¹ ¹øÂ° °á°ú¸¦ °¡Á®¿É´Ï´Ù.
-            break  # UserID´Â °íÀ¯ÇÏ´Ù°í °¡Á¤ÇÏ¹Ç·Î ÇÏ³ªÀÇ °á°ú¸¸ °¡Á®¿É´Ï´Ù.
+            user_data = doc.to_dict()  # Ã¹ ï¿½ï¿½Â° ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½É´Ï´ï¿½.
+            break  # UserIDï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´Ù°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¹Ç·ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½É´Ï´ï¿½.
 
-        # »ç¿ëÀÚ Á¸Àç ¿©ºÎ È®ÀÎ
+        # ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
         if not user_data:
             raise HTTPException(status_code=404, detail=f"User with UserID '{user_id}' not found")
 
-        return user_data  # Á¶È¸µÈ »ç¿ëÀÚ µ¥ÀÌÅÍ ¹ÝÈ¯
+        return user_data  # ï¿½ï¿½È¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -239,21 +236,21 @@ async def update_user(item_id: str, update_data: dict):
 User API END
 """
 class RoomModel(BaseModel):
-    MaxUser: int = 8   # ÃÖ´ë À¯Àú ¼ö
-    Name: str       # ¹æ ÀÌ¸§
-    RoomID: str     # ¹æ ID
-    RoomState: bool = False # ¹æ »óÅÂ (True: °ÔÀÓ ½ÃÀÛ, False: °ÔÀÓ ´ë±â)
-    RoomHostID: str # ¹æÀå (¸Ç Ã³À½ »ý¼ºÇÑ À¯Àú ID)
-    UserList: List[str] = []# À¯Àú ¸®½ºÆ® (UserID ¹è¿­)
-    SessionID: str = None # ¹æ »ý¼º ½Ã ChatID¸¦ ÀúÀå
+    MaxUser: int = 8   # ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
+    Name: str       # ï¿½ï¿½ ï¿½Ì¸ï¿½
+    RoomID: str     # ï¿½ï¿½ ID
+    RoomState: bool = False # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (True: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, False: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½)
+    RoomHostID: str # ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ Ã³ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ID)
+    UserList: List[str] = []# ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® (UserID ï¿½è¿­)
+    SessionID: str = None # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ChatIDï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 """
 Room API START
 """
-# ¹æ »óÅÂ Á¶È¸ API
+# ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸ API
 @app.get("/firebase/Room/{room_id}", tags=["Room"], summary="Get Current Rooms", response_model=List[RoomModel])
 async def get_room_status(room_id: str):
     """
-    ¹æ »óÅÂ Á¶È¸.
+    ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸.
     """
     room_ref = firestore_client.collection("Room").document(room_id)
     room_doc = room_ref.get()
@@ -261,24 +258,24 @@ async def get_room_status(room_id: str):
         raise HTTPException(status_code=404, detail="Room not found.")
     return room_doc.to_dict()
 
-# Firestore¿¡¼­ ¸ðµç ¹æ¿¡ ´ëÇÑ Á¤º¸¸¦ °¡Á®¿À±â
+# Firestoreï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½æ¿¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 @app.get("/firebase/Room/", tags=["Room"], summary="Get ALL Rooms", response_model=List[RoomModel])
 async def get_all_rooms():
     """
     Retrieve all game rooms from Firestore.
     """
     try:
-        # Firestore¿¡¼­ ¸ðµç ¹æ µ¥ÀÌÅÍ °¡Á®¿À±â
+        # Firestoreï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         rooms_query = firestore_client.collection("Room").stream()
 
-        # °á°ú ÀúÀå
+        # ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         rooms = [doc.to_dict() for doc in rooms_query]
 
-        # ¹æÀÌ ¾øÀ» °æ¿ì
+        # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
         if not rooms:
             raise HTTPException(status_code=404, detail="No rooms found")
 
-        return rooms  # ¹æ µ¥ÀÌÅÍ ¸®½ºÆ® ¹ÝÈ¯
+        return rooms  # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½È¯
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
@@ -288,26 +285,26 @@ async def start_game(room_id: str):
     Start the game by setting RoomState to True and clearing chat messages.
     """
     try:
-        # Firestore¿¡¼­ Room ¹®¼­ °¡Á®¿À±â
+        # Firestoreï¿½ï¿½ï¿½ï¿½ Room ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         room_ref = firestore_client.collection("Room").document(room_id)
         room_doc = room_ref.get()
 
         if not room_doc.exists:
             raise HTTPException(status_code=404, detail=f"Room with ID '{room_id}' not found")
 
-        # RoomState¸¦ True·Î ¼³Á¤
+        # RoomStateï¿½ï¿½ Trueï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         room_data = room_doc.to_dict()
         room_data["RoomState"] = True
         room_ref.update({"RoomState": True})
 
-        # Firestore¿¡¼­ Session ¹®¼­ °¡Á®¿À±â
+        # Firestoreï¿½ï¿½ï¿½ï¿½ Session ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         session_ref = firestore_client.collection("Chat").document(room_id)
         session_doc = session_ref.get()
 
         if not session_doc.exists:
             raise HTTPException(status_code=404, detail=f"session with ID '{room_id}' not found")
 
-        # Ã¤ÆÃ ÃÊ±âÈ­ (Messages ¹è¿­ ºñ¿ì±â)
+        # Ã¤ï¿½ï¿½ ï¿½Ê±ï¿½È­ (Messages ï¿½è¿­ ï¿½ï¿½ï¿½ï¿½)
         session_ref.update({"Messages": []})
 
         return {"message": f"Game started for Room '{room_id}', session has been reset"}
@@ -321,26 +318,26 @@ async def end_game(room_id: str):
     End the game by setting RoomState to False and clearing chat messages.
     """
     try:
-        # Firestore¿¡¼­ Room ¹®¼­ °¡Á®¿À±â
+        # Firestoreï¿½ï¿½ï¿½ï¿½ Room ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         room_ref = firestore_client.collection("Room").document(room_id)
         room_doc = room_ref.get()
 
         if not room_doc.exists:
             raise HTTPException(status_code=404, detail=f"Room with ID '{room_id}' not found")
 
-        # RoomState¸¦ False·Î ¼³Á¤
+        # RoomStateï¿½ï¿½ Falseï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         room_data = room_doc.to_dict()
         room_data["RoomState"] = False
         room_ref.update({"RoomState": False})
 
-        # Firestore¿¡¼­ Session ¹®¼­ °¡Á®¿À±â
+        # Firestoreï¿½ï¿½ï¿½ï¿½ Session ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         session_ref = firestore_client.collection("Chat").document(room_id)
         session_doc = session_ref.get()
 
         if not session_doc.exists:
             raise HTTPException(status_code=404, detail=f"session with ID '{room_id}' not found")
 
-        # Ã¤ÆÃ ÃÊ±âÈ­ (Messages ¹è¿­ ºñ¿ì±â)
+        # Ã¤ï¿½ï¿½ ï¿½Ê±ï¿½È­ (Messages ï¿½è¿­ ï¿½ï¿½ï¿½ï¿½)
         session_ref.update({"Messages": []})
 
         return {"message": f"Game ended for Room '{room_id}', session has been reset"}
@@ -354,48 +351,48 @@ async def leave_room(room_id: str, user_id: str):
     Remove a user from the UserList of a room and update the Room information.
     """
     try:
-        # Firestore¿¡¼­ ÇØ´ç Room °¡Á®¿À±â
+        # Firestoreï¿½ï¿½ï¿½ï¿½ ï¿½Ø´ï¿½ Room ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         doc_ref = firestore_client.collection("Room").document(room_id)
         room_doc = doc_ref.get()
 
-        # ¹æ Á¸Àç ¿©ºÎ È®ÀÎ
+        # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
         if not room_doc.exists:
             raise HTTPException(status_code=404, detail=f"Room with ID '{room_id}' not found")
 
-        # ¹æ µ¥ÀÌÅÍ °¡Á®¿À±â
+        # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         room_data = room_doc.to_dict()
         user_list = room_data.get("UserList", [])
 
-        # À¯Àú°¡ UserList¿¡ ÀÖ´ÂÁö È®ÀÎ
+        # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ UserListï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½
         if user_id not in user_list:
             raise HTTPException(status_code=400, detail=f"User '{user_id}' is not in the room")
 
-        # À¯Àú¸¦ UserList¿¡¼­ Á¦°Å
+        # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ UserListï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         user_list.remove(user_id)
 
-        # ¹æÀåÀÌ ¹æÀ» ³ª°£ °æ¿ì Ã³¸®
+        # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
         if room_data.get("RoomHostID") == user_id:
             if user_list:
-                # ³²¾ÆÀÖ´Â À¯Àú Áß Ã¹ ¹øÂ° À¯Àú¸¦ ¹æÀåÀ¸·Î ¼³Á¤
+                # ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ Ã¹ ï¿½ï¿½Â° ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 room_data["RoomHostID"] = user_list[0]
             else:
-                # À¯Àú°¡ ¾Æ¹«µµ ¾øÀ¸¸é ¹æÀåÀº None
+                # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Æ¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ None
                 room_data["RoomHostID"] = None
         
-        # ¹æÀÌ ºñ¾î ÀÖ´Â °æ¿ì Firestore¿¡¼­ ¹®¼­ »èÁ¦
+        # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ Firestoreï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if not user_list:
             room_data = room_doc.to_dict()
             room_id = room_data.get("RoomID")
-            doc_ref.delete() # ¹æ »èÁ¦
-            if room_id: # Ã¤ÆÃ ÄÃ·º¼Çµµ »èÁ¦
+            doc_ref.delete() # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            if room_id: # Ã¤ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Çµï¿½ ï¿½ï¿½ï¿½ï¿½
                 session_ref = firestore_client.collection("Session").document(room_id)
                 session_ref.delete()
             return {"message": f"Room '{room_id}' has been deleted as it is empty"}
 
-        # ¾÷µ¥ÀÌÆ®µÈ UserList ÀúÀå
+        # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ UserList ï¿½ï¿½ï¿½ï¿½
         room_data["UserList"] = user_list
 
-        # Firestore¿¡ ¾÷µ¥ÀÌÆ®µÈ ¹æ Á¤º¸ ÀúÀå
+        # Firestoreï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         doc_ref.update(room_data)
 
         return {"message": f"User '{user_id}' has left the room", "updated_room": room_data}
@@ -409,32 +406,32 @@ async def join_room(room_id: str, user_id: str):
     Add a user to the UserList of an existing room.
     """
     try:
-        # Firestore¿¡¼­ ÇØ´ç Room °¡Á®¿À±â
+        # Firestoreï¿½ï¿½ï¿½ï¿½ ï¿½Ø´ï¿½ Room ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         doc_ref = firestore_client.collection("Room").document(room_id)
         room_doc = doc_ref.get()
 
-        # ¹æ Á¸Àç ¿©ºÎ È®ÀÎ
+        # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
         if not room_doc.exists:
             raise HTTPException(status_code=404, detail=f"Room with ID '{room_id}' not found")
 
-        # ¹æ µ¥ÀÌÅÍ °¡Á®¿À±â
+        # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         room_data = room_doc.to_dict()
         user_list = room_data.get("UserList", [])
-        max_user = room_data.get("MaxUser", 8)  # ±âº» ÃÖ´ë À¯Àú ¼ö´Â 8·Î ¼³Á¤
+        max_user = room_data.get("MaxUser", 8)  # ï¿½âº» ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ 8ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-        # ÀÌ¹Ì ¹æ¿¡ ÀÖ´Â °æ¿ì
+        # ï¿½Ì¹ï¿½ ï¿½æ¿¡ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½
         if user_id in user_list:
             return {"message": f"User '{user_id}' has joined the room", "updated_room": room_data}
 
-        # ¹æÀÌ ²Ë Âù °æ¿ì
+        # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½
         if len(user_list) >= max_user:
             raise HTTPException(status_code=400, detail=f"Room '{room_id}' is full")
 
-        # À¯Àú¸¦ UserList¿¡ Ãß°¡
+        # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ UserListï¿½ï¿½ ï¿½ß°ï¿½
         user_list.append(user_id)
         room_data["UserList"] = user_list
 
-        # Firestore¿¡ ¾÷µ¥ÀÌÆ®µÈ ¹æ Á¤º¸ ÀúÀå
+        # Firestoreï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         doc_ref.update({"UserList": user_list})
 
         return {"message": f"User '{user_id}' has joined the room", "updated_room": room_data}
@@ -454,7 +451,7 @@ class ChatInfo(BaseModel):
 class AddSessionRequest(BaseModel):
     ChatMessage: ChatInfo
 
-MAX_MESSAGES = 10  # ÃÖ´ë ¸Þ½ÃÁö ¼ö Á¦ÇÑ
+MAX_MESSAGES = 10  # ï¿½Ö´ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 """
 Session API START
 """
@@ -464,27 +461,27 @@ async def add_chat_message(room_id: str, session_request: AddSessionRequest):
     Add a chat message to the Chat collection, maintaining a maximum of 10 messages (FIFO).
     """
     try:
-        # Firestore¿¡¼­ ChatID ¹®¼­ °¡Á®¿À±â
+        # Firestoreï¿½ï¿½ï¿½ï¿½ ChatID ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         doc_ref = firestore_client.collection("Session").document(room_id)
         session_doc = doc_ref.get()
 
         if not session_doc.exists:
-            # Ã¤ÆÃ ¹®¼­°¡ ¾øÀ¸¸é »õ·Î »ý¼º
+            # Ã¤ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             session_data = {
                 "Messages": [session_request.ChatMessage.dict()],
             }
             doc_ref.set(session_data)
         else:
-            # ±âÁ¸ ¹®¼­¿¡¼­ ¸Þ½ÃÁö °¡Á®¿À±â
+            # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             session_data = session_doc.to_dict()
             messages = session_data.get("Messages", [])
 
-            # FIFO ¹æ½ÄÀ¸·Î ¸Þ½ÃÁö Ãß°¡
+            # FIFO ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
             if len(messages) >= MAX_MESSAGES:
-                messages.pop(0)  # °¡Àå ¿À·¡µÈ ¸Þ½ÃÁö Á¦°Å (Ã¹ ¹øÂ° ¸Þ½ÃÁö)
-            messages.append(session_request.ChatMessage.dict())  # »õ·Î¿î ¸Þ½ÃÁö Ãß°¡
+                messages.pop(0)  # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (Ã¹ ï¿½ï¿½Â° ï¿½Þ½ï¿½ï¿½ï¿½)
+            messages.append(session_request.ChatMessage.dict())  # ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
 
-            # Firestore¿¡ ¾÷µ¥ÀÌÆ®
+            # Firestoreï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
             session_data["Messages"] = messages
             doc_ref.update({"Messages": messages})
 
@@ -495,7 +492,7 @@ async def add_chat_message(room_id: str, session_request: AddSessionRequest):
 """
 Chat API END
 """
-# Realtime Database¿¡ µ¥ÀÌÅÍ Ãß°¡
+# Realtime Databaseï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
 @app.post("/firebase/realtime/items/", tags=["Firebase"])
 async def add_item_to_realtime(item: Item):
     """
@@ -504,7 +501,7 @@ async def add_item_to_realtime(item: Item):
     ref = realtime_db.child("items").push(item.dict())
     return {"message": "Item added successfully", "id": ref.key}
 
-# Realtime Database¿¡¼­ µ¥ÀÌÅÍ Á¶È¸
+# Realtime Databaseï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸
 @app.get("/firebase/realtime/items/{item_id}", tags=["Firebase"])
 async def get_item_from_realtime(item_id: str):
     """
