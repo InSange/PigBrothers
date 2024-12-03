@@ -62,7 +62,7 @@ const Page = () => {
 
   return (
     <ChatProvider>
-      <Layout>
+      <Layout style={{ height: '100vh' }}>
         <PigHeader onClick={handleGotoBack} />
         <SessionContentContainer>
           <Users />

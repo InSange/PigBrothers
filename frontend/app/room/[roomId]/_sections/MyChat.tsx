@@ -12,8 +12,8 @@ const MyChat = ({ message }: { message: Message }) => {
     <MyChatBubble>
       <ChatImage src={'/pig.png'} />
       <ChatInfoContainer>
-        <ChatName>내 이름</ChatName>
-        <ChatContent>내 채팅</ChatContent>
+        <ChatName>{message.sender}</ChatName>
+        <ChatContent>{message.text}</ChatContent>
       </ChatInfoContainer>
     </MyChatBubble>
   );

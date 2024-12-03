@@ -40,6 +40,7 @@ export const ChattingContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
 `;
 
 export const ChattingContainerTitle = styled.div`

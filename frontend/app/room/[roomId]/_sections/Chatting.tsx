@@ -22,23 +22,27 @@ const Chatting = () => {
     throw new Error('ChatMessageList must be used within a ChatProvider');
   }
 
+  console.log(messages);
+
   return (
-    <ChattingContainer>
+    <ChattingContainer style={{ overflow: 'auto' }}>
       <ChattingContainerTitle>채팅창</ChattingContainerTitle>
-      {messages?.map((message, i) => {
-        console.log(message);
-        const isMe = message.sender === userId;
-        return (
-          <div key={i}>
-            {isMe ? (
-              <MyChat message={message} />
-            ) : (
-              <OtherUserChat message={message} />
-            )}
-          </div>
-        );
-      })}
-      <div ref={messagesEndRef} />
+      <div>
+        {messages?.map((message, i) => {
+          console.log(message);
+          const isMe = message.sender === userId;
+          return (
+            <div key={i}>
+              {isMe ? (
+                <MyChat message={message} />
+              ) : (
+                <OtherUserChat message={message} />
+              )}
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
     </ChattingContainer>
   );
 };

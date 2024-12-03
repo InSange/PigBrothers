@@ -9,24 +9,36 @@ const ChattingInput = () => {
   const { userId } = useContext(GlobalContext);
   const [text, setText] = useState<string>('');
 
-  if (!userId) return;
+  if (!userId) return null;
+
+  const handleSend = () => {
+    if (text.trim() === '') return; // 빈 메시지는 전송하지 않음
+    sendMessage({ sender: userId, text, type: 'chat' });
+    setText('');
+  };
+
   return (
     <div
       style={{
         display: 'flex',
         flexDirection: 'row',
         gap: '4px',
-        flex: 1,
       }}
     >
       <Textfield
         type='text'
         value={text}
         onChange={(e) => setText(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault(); // 폼 제출 등의 기본 동작 방지
+            handleSend();
+          }
+        }}
       />
       <Button
         style={{ flexShrink: 0, width: 'fit-content' }}
-        onClick={() => sendMessage({ sender: userId, text, type: 'lobby' })}
+        onClick={handleSend}
       >
         전송
       </Button>
@@ -35,9 +47,3 @@ const ChattingInput = () => {
 };
 
 export default ChattingInput;
-
-[
-  { sender: '#!@#!#!@#', text: 'ㅎㅇ' },
-  { sender: '123123131', text: '응 ㅎㅇ' },
-  { sender: 'manager', text: '돼지 먹어치워라' },
-];
