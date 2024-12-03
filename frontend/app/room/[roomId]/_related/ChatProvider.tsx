@@ -1,12 +1,21 @@
 'use client';
 
-import { createContext, ReactNode, useEffect, useMemo, useState } from 'react';
+import { GlobalContext } from '@/app/GlobalContext';
+import { useParams } from 'next/navigation';
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import createWebSocket from './websocket';
 
 export type Message = {
   sender: string;
   text: string;
-  type: 'lobby' | 'inGame';
+  type: 'chat' | 'start_game' | 'end_game';
 };
 
 type ChatContextType = {
@@ -20,12 +29,16 @@ export const ChatContext = createContext<ChatContextType>({
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
+  const { roomId } = useParams<{ roomId: string }>();
   const [messages, setMessages] = useState<Message[]>([]);
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const { userId } = useContext(GlobalContext);
 
   useEffect(() => {
-    const ws = createWebSocket('ws://localhost:8000/ws/chat');
-    // const ws = createWebSocket('ws://13.125.139.238:8000/ws/chat');
+    // const ws = createWebSocket('ws://localhost:8000/ws/chat');
+    const ws = createWebSocket(
+      `wss://wam-coin.store/ws/chat/${roomId}/${userId}`
+    );
     setSocket(ws);
 
     ws.onopen = () => {
@@ -42,6 +55,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
     ws.onmessage = (event) => {
       const message: Message = JSON.parse(event.data);
+      console.log(message);
       setMessages((prev) => [...prev, message]);
     };
 
