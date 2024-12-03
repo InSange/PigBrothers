@@ -3,7 +3,7 @@
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from firebase_config import firestore_client
 from firebase_config import realtime_db
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from typing import List, Dict
 from datetime import datetime
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,7 +34,7 @@ class Player:
         self.is_alive = True # 생존 여부
         self.vote_count = 0 # 투표 받은 횟수
 
-class Message:
+class Message(BaseModel):
     sender: str # 송신자
     text: str # 메시지 내용
     type: str # 메시지 타입
@@ -59,10 +59,20 @@ class ConnectionManager:
         self.active_connections.remove(websocket)
         self.players.remove(user_id)
 
-    async def broadcast(self, message: Message):
+    async def broadcast(self, message):
         """모든 연결에 메시지 전송"""
+        # 메시지가 객체라면 JSON 문자열로 변환
+        if isinstance(message, BaseModel):
+            message = message.json()
+        elif not isinstance(message, str):
+            message = json.dumps(message)
+
         for connection in self.active_connections:
             await connection.send_text(message)
+
+    async def broadcast_message(self, message):
+        """Message 객체를 모든 연결에 JSON 문자열로 브로드캐스트"""
+        await self.broadcast(message)
 
     async def reset_votes(self):
         for player in self.players:
@@ -128,27 +138,32 @@ async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str
         while True:
             # 클라이언트로부터 메시지 수신
             data = await websocket.receive_text()
-            message = Message.parse_raw(data)
+            try:
+                # 메시지 모델로 파싱
+                message = Message.model_validate_json(data)
 
-            if message.type == "chat":
-                # 대기 상태에서만 채팅 허용
-                if not room.in_game:
-                    await room.broadcast_message(message)
-                else:
-                    await websocket.send_text("게임 중에는 채팅이 제한됩니다.")
+                if message.type == "chat":
+                    # 대기 상태에서만 채팅 허용
+                    if not room.in_game:
+                        await room.broadcast_message(message)
+                    else:
+                        await websocket.send_text("게임 중에는 채팅이 제한됩니다.")
 
-            elif message.type == "start_game":
-                # 게임 시작
-                if not room.in_game:
-                    room.in_game = True
-                    await room.broadcast("관리자: 게임이 시작되었습니다!")
-                    firestore_client.collection("Room").document(room_id).update({"RoomState": True})
+                elif message.type == "start_game":
+                    # 게임 시작
+                    if not room.in_game:
+                        room.in_game = True
+                        await room.broadcast("관리자: 게임이 시작되었습니다!")
+                        firestore_client.collection("Room").document(room_id).update({"RoomState": True})
 
-            elif message.type == "end_game":
-                # 게임 종료
-                room.in_game = False
-                await room.broadcast("관리자: 게임이 종료되었습니다!")
-                firestore_client.collection("Room").document(room_id).update({"RoomState": False})
+                elif message.type == "end_game":
+                    # 게임 종료
+                    room.in_game = False
+                    await room.broadcast("관리자: 게임이 종료되었습니다!")
+                    firestore_client.collection("Room").document(room_id).update({"RoomState": False})
+
+            except ValidationError as e:
+                await websocket.send_text(f"Invalid message format: {e}")
 
     except WebSocketDisconnect:
         # 연결 끊김 처리
