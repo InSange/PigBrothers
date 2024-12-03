@@ -13,4 +13,5 @@ Run pip install gunicorn
 COPY . .
 
 # Flask 애플리케이션 실행
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/etc/letsencrypt/live/yourdomain.com/privkey.pem", "--ssl-certfile", "/etc/letsencrypt/live/yourdomain.com/fullchain.pem"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--ssl-keyfile", "/etc/letsencrypt/live/wam-coin.store/privkey.pem", "--ssl-certfile", "/etc/letsencrypt/live/wam-coin.store/fullchain.pem"]
+
