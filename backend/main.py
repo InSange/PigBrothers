@@ -59,14 +59,13 @@ class ConnectionManager:
         elif not self.players:
             room_manager.delete_room(self.room_id)
 
-    async def broadcast(self, message):
-        if isinstance(message, BaseModel):
-            message = message.json()
-        elif not isinstance(message, str):
-            message = json.dumps(message)
+    async def broadcast(self, message: Message):
+        # Message 객체를 JSON으로 변환
+        message_json = message.json()
 
+        # 모든 연결된 클라이언트에 메시지 전송
         for connection in self.active_connections:
-            await connection.send_text(message)
+            await connection.send_text(message_json)
 
     async def broadcast_message(self, message):
         await self.broadcast(message)
@@ -133,19 +132,28 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
         await websocket.send_text(json.dumps({
             "sender": "host",
             "type": "room_info",
-            "data": room_data
+            "text": ""
         }))
 
         if is_creator:
-            await room.broadcast(f"{user_id} created and joined the room '{room_id}'.")
+            await room.broadcast( Message(
+                                        sender="host",  # "host"가 발신자를 의미
+                                        text=f"{user_id} created and joined the room '{room_id}'.",  # 전송할 텍스트 내용
+                                        type="notification"  # 메시지 유형을 나타냄
+                                    ))
         else:
-            await room.broadcast(f"{user_id} joined the room '{room_id}'.")
+            await room.broadcast( Message(
+                                        sender="host",  # "host"가 발신자를 의미
+                                        text=f"{user_id} joined the room '{room_id}'.",  # 전송할 텍스트 내용
+                                        type="notification"  # 메시지 유형을 나타냄
+                                    ))
 
         # 메시지 처리 루프
         await handle_room_while(websocket, room, room_ref, user_id)
 
     except WebSocketDisconnect:
         # 연결 해제 시 처리
+        room = room_manager.get_room(room_id)
         room.disconnect(websocket, user_id)
         room_data["UserList"].remove(user_id)
 
@@ -162,11 +170,11 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
             })
 
             await room.broadcast({
-                "type": "update_room",
-                "data": {
-                    "room_host": room_data["RoomHostID"],
-                    "players": room_data["UserList"]
-                }
+                Message(
+                                        sender="host",  # "host"가 발신자를 의미
+                                        text=f"change the RoomHost {room_data["RoomHostID"]}",  # 전송할 텍스트 내용
+                                        type="notification"  # 메시지 유형을 나타냄
+                                    )
             })
 
 async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_ref, user_id: str):
@@ -227,25 +235,35 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
                 })
 
                 # 占쏙옙占쏙옙 占쏙옙占쏙옙占썽에占쏙옙 占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙占쏙옙트
-                await room.broadcast({
-                    "type": "update_room",
-                    "data": {
-                        "room_host": room_data["RoomHostID"],
-                        "players": room_data["UserList"]
-                    }
-                })
+                await room.broadcast(
+                    Message(
+                                        sender="host",  # "host"가 발신자를 의미
+                                        text=f"host change '{room_data["RoomHostID"]}'.",  # 전송할 텍스트 내용
+                                        type="notification"  # 메시지 유형을 나타냄
+                                    )
+                )
 
                 await websocket.close(code=1000, reason="You have left the room.")
 
             elif message.type == "start_game":
                 if not room.in_game:
                     room.in_game = True
-                    await room.broadcast("Game has started!")
+                    await room.broadcast(
+                        Message(
+                                        sender="host",  # "host"가 발신자를 의미
+                                        text=f"Game has started!",  # 전송할 텍스트 내용
+                                        type="notification"  # 메시지 유형을 나타냄
+                                    ))
                     room_ref.update({"RoomState": True})
 
             elif message.type == "end_game":
                 room.in_game = False
-                await room.broadcast("Game has ended!")
+                await room.broadcast(
+                    Message(
+                                        sender="host",  # "host"가 발신자를 의미
+                                        text=f"Game has ended!",  # 전송할 텍스트 내용
+                                        type="notification"  # 메시지 유형을 나타냄
+                                    ))
                 room_ref.update({"RoomState": False})
 
     except WebSocketDisconnect:
@@ -263,13 +281,14 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
                 room.room_host = room.players[0]
                 room_ref.update({"RoomHostID": room.room_host})
 
-            await room.broadcast({
-                "type": "update_room",
-                "data": {
-                    "room_host": room.room_host,
-                    "players": room.players
-                }
-            })
+            await room.broadcast(
+                Message(
+                                        sender="host",  # "host"가 발신자를 의미
+                                        text=f"update_room {room.room_host}",  # 전송할 텍스트 내용
+                                        type="notification"  # 메시지 유형을 나타냄
+                                    )
+
+            )
 
 
 class Item(BaseModel):
