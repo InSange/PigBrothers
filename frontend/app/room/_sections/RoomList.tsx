@@ -1,12 +1,12 @@
 'use client';
 
 import Button from '@/app/_components/Button';
-import { useJoinRoomFirebaseRoomRoomIdJoinPut } from '@/app/api/room/hooks/useMutationSession';
 import { GlobalContext } from '@/app/GlobalContext';
 import { RoomModel } from '@/types/Api';
 import { useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import { useContext } from 'react';
+import { ChatContext } from '../[roomId]/_related/ChatProvider';
 import {
   PersonCount,
   PersonCountContainer,
@@ -18,8 +18,8 @@ import {
 
 const RoomList = ({ room }: { room: RoomModel }) => {
   const { userId } = useContext(GlobalContext);
+  const { handleJoinRoom: joinAction } = useContext(ChatContext);
   const router = useRouter();
-  const { mutateAsync: joinRoom } = useJoinRoomFirebaseRoomRoomIdJoinPut();
 
   if (!room) return;
 
@@ -29,14 +29,8 @@ const RoomList = ({ room }: { room: RoomModel }) => {
       return router.push('/home');
     }
 
-    joinRoom({
-      query: {
-        user_id: userId,
-      },
-      roomId: room.RoomID,
-    }).then(() => {
-      router.push(`/room/${room.RoomID}`);
-    });
+    joinAction();
+    router.push(`/room/${room.RoomID}`);
   };
 
   return (

@@ -2,8 +2,6 @@ import { useMutation } from '@tanstack/react-query';
 import {
   addRoomFirebaseRoomPost,
   endGameFirebaseRoomRoomIdEndPut,
-  joinRoomFirebaseRoomRoomIdJoinPut,
-  leaveRoomFirebaseRoomRoomIdLeavePut,
   startGameFirebaseRoomRoomIdStartPut,
 } from '../room.api';
 
@@ -25,20 +23,6 @@ export function useStartGameFirebaseRoomRoomIdStartPut() {
 export function useEndGameFirebaseRoomRoomIdEndPut() {
   const mutation = useMutation({
     mutationFn: endGameFirebaseRoomRoomIdEndPut,
-  });
-
-  return mutation;
-}
-export function useLeaveRoomFirebaseRoomRoomIdLeavePut() {
-  const mutation = useMutation({
-    mutationFn: leaveRoomFirebaseRoomRoomIdLeavePut,
-  });
-
-  return mutation;
-}
-export function useJoinRoomFirebaseRoomRoomIdJoinPut() {
-  const mutation = useMutation({
-    mutationFn: joinRoomFirebaseRoomRoomIdJoinPut,
   });
 
   return mutation;
