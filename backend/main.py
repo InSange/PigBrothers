@@ -37,6 +37,7 @@ app.add_middleware(
 class Player:
     def __init__(self, name: str):
         self.name = name
+        self.user_id = "active" # "active", "disconnected", "eliminated"
         self.is_alive = True 
         self.vote_count = 0 
 
@@ -51,16 +52,22 @@ class ConnectionManager:
         self.active_connections: List[WebSocket] = [] 
         self.players: List[str] = [] 
         self.in_game = False  
-        self.current_speaker_index = 0 
+        self.room_host: str = ""
 
     async def connect(self, websocket: WebSocket, user_id: str):
         await websocket.accept()
         self.active_connections.append(websocket)
         self.players.append(user_id)
+        if not self.room_host:
+            self.room_host = user_id  # set ROOM HOST
 
     def disconnect(self, websocket: WebSocket, user_id: str):
         self.active_connections.remove(websocket)
         self.players.remove(user_id)
+        if self.room_host == user_id and self.players:
+            self.room_host = self.players[0]  # Set remain User First
+        elif not self.players:
+            room_manager.delete_room(self.room_id)
 
     async def broadcast(self, message):
         if isinstance(message, BaseModel):
@@ -96,6 +103,7 @@ room_manager = RoomManager()
 @app.websocket("/ws/create/{room_id}/{user_id}/{room_name}")
 async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str, room_name: str = None):
     try:
+        # Create Firebase data
         room_ref = firestore_client.collection("Room").document(room_id)
 
         if room_ref.get().exists:
@@ -111,6 +119,46 @@ async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str
             "UserList": [user_id],
         }
         room_ref.set(room_data)
+        # Create and Set room(RoomManager)
+        room = room_manager.get_room(room_id)
+        await room.connect(websocket, user_id)
+
+        await websocket.send_text(json.dumps({
+#            sender: str
+#    text: str 
+#    type: str
+            "type": "room_info",
+            "data": room_data
+        }))
+
+        await room.broadcast(f"{user_id} created and joined the room '{room_id}'.")
+        await handle_room_while(websocket, room, room_ref, user_id)
+
+    except WebSocketDisconnect:
+        room.disconnect(websocket, user_id)
+        if not room.active_connections:
+            room_manager.delete_room(room_id)
+
+@app.websocket("/ws/join/{room_id}/{user_id}")
+async def websocket_join_room(websocket: WebSocket, room_id: str, user_id: str):
+    """
+    connect player in room
+    """
+    try:
+        room_ref = firestore_client.collection("Room").document(room_id)
+
+        if not room_ref.get().exists():
+            await websocket.close(code=4000, reason="Room does not exist.")
+            return
+
+        room_data = room_ref.get().to_dict()
+
+        if len(room_data["UserList"]) >= room_data["MaxUser"]:
+            await websocket.close(code=4001, reason="Room is full.")
+            return
+
+        room_data["UserList"].append(user_id)
+        room_ref.update({"UserList": room_data["UserList"]})
 
         room = room_manager.get_room(room_id)
         await room.connect(websocket, user_id)
@@ -120,37 +168,151 @@ async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str
             "data": room_data
         }))
 
-        await room.broadcast(f"{user_id} created and joined the room '{room_id}'.")
+        await room.broadcast(f"{user_id} joined the room '{room_id}'.")
 
+        # 공통 로직 호출
+        await handle_room_while(websocket, room, room_ref, user_id)
+
+    except WebSocketDisconnect:
+        pass
+
+@app.websocket("/ws/leave/{room_id}/{user_id}")
+async def websocket_leave_room(websocket: WebSocket, room_id: str, user_id: str):
+    """
+    leav room
+    """
+    try:
+        room_ref = firestore_client.collection("Room").document(room_id)
+
+        if not room_ref.get().exists():
+            await websocket.close(code=4000, reason="Room does not exist.")
+            return
+
+        room_data = room_ref.get().to_dict()
+        room = room_manager.get_room(room_id)
+
+        if user_id not in room_data["UserList"]:
+            await websocket.close(code=4001, reason="User is not in the room.")
+            return
+
+        # WebSocket 연결 종료 처리
+        room.disconnect(websocket, user_id)
+
+        # Firebase에서 유저 제거
+        room_data["UserList"].remove(user_id)
+
+        if not room_data["UserList"]:
+            # 방에 유저가 없으면 방 삭제
+            room_manager.delete_room(room_id)
+            room_ref.delete()
+            await websocket.close(code=1000, reason="Room is now empty and has been deleted.")
+            return
+
+        # 방장이 나갔으면 새로운 방장 설정
+        if room_data["RoomHostID"] == user_id:
+            room_data["RoomHostID"] = room_data["UserList"][0]  # 첫 번째 남은 유저를 방장으로 설정
+
+        # Firebase 업데이트
+        room_ref.update({
+            "UserList": room_data["UserList"],
+            "RoomHostID": room_data["RoomHostID"]
+        })
+
+        # 남은 유저들에게 방 상태 업데이트
+        await room.broadcast({
+            "type": "update_room",
+            "data": {
+                "room_host": room_data["RoomHostID"],
+                "players": room_data["UserList"]
+            }
+        })
+
+        await websocket.close(code=1000, reason="You have left the room.")
+
+    except WebSocketDisconnect:
+        # 유저가 비정상적으로 연결을 끊은 경우 처리
+        room.disconnect(websocket, user_id)
+
+        if user_id in room_data["UserList"]:
+            room_data["UserList"].remove(user_id)
+
+        if not room_data["UserList"]:
+            # 방 삭제
+            room_manager.delete_room(room_id)
+            room_ref.delete()
+        else:
+            # 방장이 나갔으면 새 방장 설정
+            if room_data["RoomHostID"] == user_id:
+                room_data["RoomHostID"] = room_data["UserList"][0]
+
+            # Firebase 업데이트
+            room_ref.update({
+                "UserList": room_data["UserList"],
+                "RoomHostID": room_data["RoomHostID"]
+            })
+
+            await room.broadcast({
+                "type": "update_room",
+                "data": {
+                    "room_host": room_data["RoomHostID"],
+                    "players": room_data["UserList"]
+                }
+            })
+
+
+async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_ref, user_id: str):
+    """
+    Player message logic process in game
+
+    this.user = WebSocket
+    room = room_manager.get_room(room_id)
+    room_ref = firestore_client.collection("Room").document(room_id)
+    """
+    try:
         while True:
             data = await websocket.receive_text()
-            try:
-                message = Message.model_validate_json(data)
+            message = Message.model_validate_json(data)
 
-                if message.type == "chat":
-                    if not room.in_game:
-                        await room.broadcast_message(message)
-                    else:
-                        await websocket.send_text("ingame chat nono")
+            if message.type == "chat":
+                if not room.in_game:
+                    await room.broadcast_message(message)
+                else:
+                    await websocket.send_text("Chat is not allowed during the game.")
 
-                elif message.type == "start_game":
-                    if not room.in_game:
-                        room.in_game = True
-                        await room.broadcast("game start")
-                        firestore_client.collection("Room").document(room_id).update({"RoomState": True})
+            elif message.type == "start_game":
+                if not room.in_game:
+                    room.in_game = True
+                    await room.broadcast("Game has started!")
+                    room_ref.update({"RoomState": True})
 
-                elif message.type == "end_game":
-                    room.in_game = False
-                    await room.broadcast("game finished")
-                    firestore_client.collection("Room").document(room_id).update({"RoomState": False})
-
-            except ValidationError as e:
-                await websocket.send_text(f"Invalid message format: {e}")
+            elif message.type == "end_game":
+                room.in_game = False
+                await room.broadcast("Game has ended!")
+                room_ref.update({"RoomState": False})
 
     except WebSocketDisconnect:
         room.disconnect(websocket, user_id)
         if not room.active_connections:
-            room_manager.delete_room(room_id)
+            room_ref.delete()
+        else:
+            # firebase update if user out
+            room_data = room_ref.get().to_dict()
+            room_data["UserList"].remove(user_id)
+            room_ref.update({"UserList": room_data["UserList"]})
+
+            # if user that out of game is host sett next host
+            if room.room_host == user_id and room.players:
+                room.room_host = room.players[0]
+                room_ref.update({"RoomHostID": room.room_host})
+
+            await room.broadcast({
+                "type": "update_room",
+                "data": {
+                    "room_host": room.room_host,
+                    "players": room.players
+                }
+            })
+
 
 class Item(BaseModel):
     name: str
