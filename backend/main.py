@@ -436,23 +436,24 @@ async def start_game(room_id: str):
     Start the game by setting RoomState to True and clearing chat messages.
     """
     try:
+        room = room_manager.get_room(room_id)
+        if not room:
+            raise HTTPException(status_code = 404, detail="Room not found")
+        
+        if len(room.players) < 2:
+            raise HTTPException(status_code = 400, detail="Not enough players to start the game")
+
+        # update game state
+        room.in_game = True
         room_ref = firestore_client.collection("Room").document(room_id)
-        room_doc = room_ref.get()
-
-        if not room_doc.exists:
-            raise HTTPException(status_code=404, detail=f"Room with ID '{room_id}' not found")
-
-        room_data = room_doc.to_dict()
-        room_data["RoomState"] = True
         room_ref.update({"RoomState": True})
 
-        session_ref = firestore_client.collection("Chat").document(room_id)
-        session_doc = session_ref.get()
-
-        if not session_doc.exists:
-            raise HTTPException(status_code=404, detail=f"session with ID '{room_id}' not found")
-
-        session_ref.update({"Messages": []})
+        # WebSocket으로 브로드캐스트
+        await room.broadcast({
+            "sender": "host",
+            "type": "game_start",
+            "message": "The game has started!"
+        })
 
         return {"message": f"Game started for Room '{room_id}', session has been reset"}
 
