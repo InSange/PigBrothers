@@ -1,12 +1,3 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
-from firebase_config import firestore_client
-from firebase_config import realtime_db
-from pydantic import BaseModel, ValidationError
-from typing import List, Dict
-from datetime import datetime
-from fastapi.middleware.cors import CORSMiddleware
-from collections import defaultdict
-
 import asyncio
 import json
 from collections import defaultdict
@@ -16,7 +7,7 @@ from typing import Dict, List
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from firebase_config import firestore_client, realtime_db
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 app = FastAPI(
     title="My API with Response Models",
@@ -145,7 +136,7 @@ async def websocket_join_room(websocket: WebSocket, room_id: str, user_id: str):
     try:
         room_ref = firestore_client.collection("Room").document(room_id)
 
-        if not room_ref.get().exists():
+        if not room_ref.get().exists:
             await websocket.close(code=4000, reason="Room does not exist.")
             return
 
@@ -169,7 +160,7 @@ async def websocket_join_room(websocket: WebSocket, room_id: str, user_id: str):
 
         await room.broadcast(f"{user_id} joined the room '{room_id}'.")
 
-        # °øÅë ·ÎÁ÷ È£Ãâ
+        # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È£ï¿½ï¿½
         await handle_room_while(websocket, room, room_ref, user_id)
 
     except WebSocketDisconnect:
@@ -183,7 +174,7 @@ async def websocket_leave_room(websocket: WebSocket, room_id: str, user_id: str)
     try:
         room_ref = firestore_client.collection("Room").document(room_id)
 
-        if not room_ref.get().exists():
+        if not room_ref.get().exists:
             await websocket.close(code=4000, reason="Room does not exist.")
             return
 
@@ -194,30 +185,30 @@ async def websocket_leave_room(websocket: WebSocket, room_id: str, user_id: str)
             await websocket.close(code=4001, reason="User is not in the room.")
             return
 
-        # WebSocket ¿¬°á Á¾·á Ã³¸®
+        # WebSocket ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
         room.disconnect(websocket, user_id)
 
-        # Firebase¿¡¼­ À¯Àú Á¦°Å
+        # Firebaseï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         room_data["UserList"].remove(user_id)
 
         if not room_data["UserList"]:
-            # ¹æ¿¡ À¯Àú°¡ ¾øÀ¸¸é ¹æ »èÁ¦
+            # ï¿½æ¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             room_manager.delete_room(room_id)
             room_ref.delete()
             await websocket.close(code=1000, reason="Room is now empty and has been deleted.")
             return
 
-        # ¹æÀåÀÌ ³ª°¬À¸¸é »õ·Î¿î ¹æÀå ¼³Á¤
+        # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if room_data["RoomHostID"] == user_id:
-            room_data["RoomHostID"] = room_data["UserList"][0]  # Ã¹ ¹øÂ° ³²Àº À¯Àú¸¦ ¹æÀåÀ¸·Î ¼³Á¤
+            room_data["RoomHostID"] = room_data["UserList"][0]  # Ã¹ ï¿½ï¿½Â° ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-        # Firebase ¾÷µ¥ÀÌÆ®
+        # Firebase ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
         room_ref.update({
             "UserList": room_data["UserList"],
             "RoomHostID": room_data["RoomHostID"]
         })
 
-        # ³²Àº À¯Àúµé¿¡°Ô ¹æ »óÅÂ ¾÷µ¥ÀÌÆ®
+        # ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½é¿¡ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
         await room.broadcast({
             "type": "update_room",
             "data": {
@@ -229,22 +220,22 @@ async def websocket_leave_room(websocket: WebSocket, room_id: str, user_id: str)
         await websocket.close(code=1000, reason="You have left the room.")
 
     except WebSocketDisconnect:
-        # À¯Àú°¡ ºñÁ¤»óÀûÀ¸·Î ¿¬°áÀ» ²÷Àº °æ¿ì Ã³¸®
+        # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
         room.disconnect(websocket, user_id)
 
         if user_id in room_data["UserList"]:
             room_data["UserList"].remove(user_id)
 
         if not room_data["UserList"]:
-            # ¹æ »èÁ¦
+            # ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             room_manager.delete_room(room_id)
             room_ref.delete()
         else:
-            # ¹æÀåÀÌ ³ª°¬À¸¸é »õ ¹æÀå ¼³Á¤
+            # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             if room_data["RoomHostID"] == user_id:
                 room_data["RoomHostID"] = room_data["UserList"][0]
 
-            # Firebase ¾÷µ¥ÀÌÆ®
+            # Firebase ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
             room_ref.update({
                 "UserList": room_data["UserList"],
                 "RoomHostID": room_data["RoomHostID"]
