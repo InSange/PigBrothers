@@ -37,8 +37,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     if (!socketRef.current) {
       // WebSocket 초기화
       const ws = createWebSocket(
-        // `wss://wam-coin.store/ws/room/${roomId}/${userId}`
-        `ws://localhost:8000/ws/room/${roomId}/${userId}`
+        `wss://wam-coin.store/ws/room/${roomId}/${userId}`
+        // `ws://localhost:8000/ws/room/${roomId}/${userId}`
       );
       socketRef.current = ws;
 
