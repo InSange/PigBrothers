@@ -46,7 +46,6 @@ class ConnectionManager:
         self.room_host: str = ""
 
     async def connect(self, websocket: WebSocket, user_id: str):
-        await websocket.accept()
         self.active_connections.append(websocket)
         self.players.append(user_id)
         if not self.room_host:
