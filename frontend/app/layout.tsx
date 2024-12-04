@@ -4,7 +4,6 @@ import SnackLib from '@/lib/SnackLib';
 import StyledComponentsRegistry from '@/lib/styled-components-registry';
 import { ReactNode } from 'react';
 import { GlobalContextProvider } from './GlobalContext';
-import { ChatProvider } from './room/[roomId]/_related/ChatProvider';
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
@@ -15,13 +14,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <StyledComponentsRegistry>
           <GlobalContextProvider>
-            <ChatProvider>
-              <SnackLib>
-                <ApiProvider>
-                  <ClientLayout>{children}</ClientLayout>
-                </ApiProvider>
-              </SnackLib>
-            </ChatProvider>
+            <SnackLib>
+              <ApiProvider>
+                <ClientLayout>{children}</ClientLayout>
+              </ApiProvider>
+            </SnackLib>
           </GlobalContextProvider>
         </StyledComponentsRegistry>
       </body>

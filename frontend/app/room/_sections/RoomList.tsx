@@ -6,7 +6,6 @@ import { RoomModel } from '@/types/Api';
 import { useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import { useContext } from 'react';
-import { ChatContext } from '../[roomId]/_related/ChatProvider';
 import {
   PersonCount,
   PersonCountContainer,
@@ -18,7 +17,6 @@ import {
 
 const RoomList = ({ room }: { room: RoomModel }) => {
   const { userId } = useContext(GlobalContext);
-  const { handleJoinRoom: joinAction } = useContext(ChatContext);
   const router = useRouter();
 
   if (!room) return;
@@ -29,7 +27,6 @@ const RoomList = ({ room }: { room: RoomModel }) => {
       return router.push('/home');
     }
 
-    joinAction();
     router.push(`/room/${room.RoomID}`);
   };
 
