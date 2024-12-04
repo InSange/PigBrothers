@@ -124,11 +124,9 @@ async def websocket_create_room(websocket: WebSocket, room_id: str, user_id: str
         await room.connect(websocket, user_id)
 
         await websocket.send_text(json.dumps({
-#            sender: str
-#    text: str 
-#    type: str
+            "sender": "host",
             "type": "room_info",
-            "data": room_data
+            "text": "room_data"
         }))
 
         await room.broadcast(f"{user_id} created and joined the room '{room_id}'.")
@@ -164,8 +162,9 @@ async def websocket_join_room(websocket: WebSocket, room_id: str, user_id: str):
         await room.connect(websocket, user_id)
 
         await websocket.send_text(json.dumps({
+            "sender": "host",
             "type": "room_info",
-            "data": room_data
+            "text": "room_data"
         }))
 
         await room.broadcast(f"{user_id} joined the room '{room_id}'.")
@@ -277,7 +276,11 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
                 if not room.in_game:
                     await room.broadcast_message(message)
                 else:
-                    await websocket.send_text("Chat is not allowed during the game.")
+                    await websocket.send_text(json.dumps({
+                            "sender": "host",
+                            "type": "room_info",
+                            "text": "room_data"
+                        }))
 
             elif message.type == "start_game":
                 if not room.in_game:
