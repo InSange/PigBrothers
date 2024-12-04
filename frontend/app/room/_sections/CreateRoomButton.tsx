@@ -1,4 +1,5 @@
 'use client';
+import generateUUID from '@/app/(root)/_related/generateUUID';
 import Button from '@/app/_components/Button';
 import {
   ButtonContainer,
@@ -11,14 +12,14 @@ import {
   XIcon,
 } from '@/app/_components/common';
 import Textfield from '@/app/_components/TextField';
-import { useContext, useState } from 'react';
-import { ChatContext } from '../[roomId]/_related/ChatProvider';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { CreateRoomButtonContainer } from '../_related/room.styled';
 
 const CreateRoomButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [roomName, setRoomName] = useState('');
-  const { handleCreateRoom } = useContext(ChatContext);
+  const router = useRouter();
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -53,9 +54,10 @@ const CreateRoomButton = () => {
                   취소
                 </Button>
                 <Button
-                  onClick={() =>
-                    handleCreateRoom({ handleCloseModal, roomName })
-                  }
+                  onClick={() => {
+                    router.push(`/room/${generateUUID()}`);
+                    handleCloseModal();
+                  }}
                 >
                   확인
                 </Button>
