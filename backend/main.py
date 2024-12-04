@@ -111,22 +111,29 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
             }
             room_ref.set(room_data)
             is_creator = True
+            print("create ROOM {}".format(room_id))
+
         else:
             # 방이 존재하면 참가
             if len(room_data["UserList"]) >= room_data["MaxUser"]:
+                print("full {}".format(user_id))
                 await websocket.close(code=4001, reason="Room is full.")
                 return
             if user_id in room_data["UserList"]:
+                print("already {}".format(user_id))
                 await websocket.close(code=4002, reason="User already in the room.")
                 return
 
             room_data["UserList"].append(user_id)
             room_ref.update({"UserList": room_data["UserList"]})
             is_creator = False
+            print("add User in Room {}".format(user_id))
 
         # RoomManager에서 방 객체 가져오기 및 연결
         room = room_manager.get_room(room_id)
         await room.connect(websocket, user_id)
+
+        print("Create Room Object {}".format(room_id))
 
         # 방 정보 전송
         await websocket.send_text(json.dumps({
