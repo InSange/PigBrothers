@@ -2,8 +2,6 @@ import { apiClient } from '@/types/apiClient';
 import {
   ApiAddRoomFirebaseRoomPostParams,
   ApiEndGameFirebaseRoomRoomIdEndPutParams,
-  ApiJoinRoomFirebaseRoomRoomIdJoinPutParams,
-  ApiLeaveRoomFirebaseRoomRoomIdLeavePutParams,
   ApiStartGameFirebaseRoomIdStartPutParams,
 } from './types';
 
@@ -32,27 +30,5 @@ export async function endGameFirebaseRoomRoomIdEndPut({
 }: ApiEndGameFirebaseRoomRoomIdEndPutParams) {
   const response =
     await apiClient.firebase.endGameFirebaseRoomRoomIdEndPut(roomId);
-  return response.data;
-}
-
-export async function leaveRoomFirebaseRoomRoomIdLeavePut({
-  query,
-  roomId,
-}: ApiLeaveRoomFirebaseRoomRoomIdLeavePutParams) {
-  const response = await apiClient.firebase.leaveRoomFirebaseRoomRoomIdLeavePut(
-    roomId,
-    query
-  );
-  return response.data;
-}
-
-export async function joinRoomFirebaseRoomRoomIdJoinPut({
-  query,
-  roomId,
-}: ApiJoinRoomFirebaseRoomRoomIdJoinPutParams) {
-  const response = await apiClient.firebase.joinRoomFirebaseRoomRoomIdJoinPut(
-    roomId,
-    query
-  );
   return response.data;
 }

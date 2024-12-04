@@ -11,16 +11,14 @@ import {
   XIcon,
 } from '@/app/_components/common';
 import Textfield from '@/app/_components/TextField';
-import { useAddRoomFirebaseRoomPost } from '@/app/api/room/hooks/useMutationSession';
 import { useContext, useState } from 'react';
 import { ChatContext } from '../[roomId]/_related/ChatProvider';
 import { CreateRoomButtonContainer } from '../_related/room.styled';
 
 const CreateRoomButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { mutateAsync: addRoom } = useAddRoomFirebaseRoomPost();
   const [roomName, setRoomName] = useState('');
-  const { handleConfirmAction } = useContext(ChatContext);
+  const { handleCreateRoom } = useContext(ChatContext);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -56,7 +54,7 @@ const CreateRoomButton = () => {
                 </Button>
                 <Button
                   onClick={() =>
-                    handleConfirmAction({ handleCloseModal, roomName })
+                    handleCreateRoom({ handleCloseModal, roomName })
                   }
                 >
                   확인
