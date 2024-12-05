@@ -37,26 +37,68 @@ class Message(BaseModel):
     text: str 
     type: str 
 
+# Game Manager
+# Game process class
+class Game:
+    def __init__(self, room_id: str):
+        self.room_id = room_id
+        self.chat_timer = 30
+        self.running = False
+        self.room = room_manager.get_room(room_id)
+
+    async def start_game(self):
+        self.running = True
+
+        while self.running and self.timer > 0:
+            await asyncio.sleep(1)
+            self.chat_timer -= 1
+
+            if self.timer == 0:
+                self.running = False
+
+    def end_game(self):
+        self.running = False
+
+class GameManager:
+    def __init__(self) -> None:
+        self.games: Dict[str, Game] = {} # room id : Game class
+    
+    def start_game(self, room_id: str):
+        if room_id in self.games:
+            return self.games[room_id]
+        
+        game = Game(room_id)
+        self.games[room_id] = game
+        asyncio.create_task(game.start_game())
+        return game
+    
+    def end_game(self, room_id: str):
+        if room_id in self.games:
+            self.games[room_id].end_game()
+            del self.games[room_id]
+
+game_manager = GameManager()
+
+# 유저 소켓 관리
+
 class ConnectionManager:
     def __init__(self, room_id: str):
         self.room_id = room_id
-        self.active_connections: List[WebSocket] = [] 
-        self.players: List[str] = [] 
+        self.active_connections: Dict[str, WebSocket] = {} # userID : WebSocket
         self.in_game = False  
         self.room_host: str = ""
 
     async def connect(self, websocket: WebSocket, user_id: str):
-        self.active_connections.append(websocket)
-        self.players.append(user_id)
+        self.active_connections[user_id] = websocket
         if not self.room_host:
             self.room_host = user_id  # set ROOM HOST
 
     def disconnect(self, websocket: WebSocket, user_id: str):
-        self.active_connections.remove(websocket)
-        self.players.remove(user_id)
-        if self.room_host == user_id and self.players:
-            self.room_host = self.players[0]  # Set remain User First
-        elif not self.players:
+        if user_id in self.active_connections:
+            del self.active_connections[user_id]
+        if self.room_host == user_id and self.active_connections:
+            self.room_host = next(iter(self.active_connections))  # 남은 사용자 중 첫 번째를 방장으로 설정
+        elif not self.active_connections:
             room_manager.delete_room(self.room_id)
 
     async def broadcast(self, message: Message):
@@ -64,15 +106,19 @@ class ConnectionManager:
         message_json = message.json()
 
         # 모든 연결된 클라이언트에 메시지 전송
-        for connection in self.active_connections:
+        for connection in self.active_connections.values():
             await connection.send_text(message_json)
+
+    async def broadcast_to_user(self, user_id: str, message: Message):
+        message_json = message.json()
+
+        if user_id in self.active_connections:
+            await self.active_connections[user_id].send_text(message_json)
 
     async def broadcast_message(self, message):
         await self.broadcast(message)
 
-    async def reset_votes(self):
-        for player in self.players:
-            player.vote_count = 0
+# 각 방에 맞는 ConnectionManager 관리
 
 class RoomManager:
     def __init__(self):
@@ -136,11 +182,11 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
         print("Create Room Object {}".format(room_id))
 
         # 방 정보 전송
-        await websocket.send_text(json.dumps({
-            "sender": "host",
-            "type": "room_info",
-            "text": ""
-        }))
+        await websocket.send_text(Message(
+            sender= "host",
+            type= "room_info",
+            text= ""
+        ))
 
         if is_creator:
             await room.broadcast( Message(
@@ -284,8 +330,8 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
             room_ref.update({"UserList": room_data["UserList"]})
 
             # if user that out of game is host sett next host
-            if room.room_host == user_id and room.players:
-                room.room_host = room.players[0]
+            if room.room_host == user_id and room.active_connections:
+                room.room_host = next(iter(room.active_connections))  # 남은 사용자 중 첫 번째를 방장으로 설정
                 room_ref.update({"RoomHostID": room.room_host})
 
             await room.broadcast(
@@ -328,7 +374,7 @@ async def add_user(data: UserModel):
         raise HTTPException(status_code=400, detail="UserID already exists in the User collection")
     
     # Add data in FireStore
-    doc_ref = firestore_client.collection("User").document()
+    doc_ref = firestore_client.collection("User").document(data.UserID)
     if(not data.Name):
         raise HTTPException(status_code=404, detail="data not include UserName")
     if(not data.UserID):
@@ -421,8 +467,11 @@ async def start_game(room_id: str):
         if not room:
             raise HTTPException(status_code = 404, detail="Room not found")
         
-        if len(room.players) < 2:
+        if len(room.active_connections) < 2:
             raise HTTPException(status_code = 400, detail="Not enough players to start the game")
+
+        # Create Game Instance
+        game_manager.start_game(room_id)
 
         # update game state
         room.in_game = True
@@ -430,11 +479,11 @@ async def start_game(room_id: str):
         room_ref.update({"RoomState": True})
 
         # WebSocket으로 브로드캐스트
-        await room.broadcast({
-            "sender": "host",
-            "type": "game_start",
-            "message": "The game has started!"
-        })
+        await room.broadcast(Message(
+            sender = "host",
+            type = "game_start",
+            text = "The game has started!"
+        ))
 
         return {"message": f"Game started for Room '{room_id}', session has been reset"}
 
@@ -591,25 +640,3 @@ async def add_chat_message(room_id: str, session_request: AddSessionRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-"""
-Chat API END
-"""
-@app.post("/firebase/realtime/items/", tags=["Firebase"])
-async def add_item_to_realtime(item: Item):
-    """
-    Add an item to Realtime Database.
-    """
-    ref = realtime_db.child("items").push(item.dict())
-    return {"message": "Item added successfully", "id": ref.key}
-
-@app.get("/firebase/realtime/items/{item_id}", tags=["Firebase"])
-async def get_item_from_realtime(item_id: str):
-    """
-    Retrieve an item from Realtime Database by ID.
-    """
-    ref = realtime_db.child(f"items/{item_id}")
-    data = ref.get()
-    if data:
-        return data
-    else:
-        raise HTTPException(status_code=404, detail="Item not found")
