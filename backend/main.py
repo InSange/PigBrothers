@@ -1,4 +1,5 @@
 import asyncio
+import random
 import json
 from collections import defaultdict
 from datetime import datetime
@@ -42,22 +43,229 @@ class Message(BaseModel):
 class Game:
     def __init__(self, room_id: str):
         self.room_id = room_id
-        self.chat_timer = 30
         self.running = False
+        self.players = [] # players in game
+        self.wolf = None # player ID on Wolf
+        self.wolf_choice = None
+        self.check_timer = 10
+        self.chat_timer = 30
+        self.vote_timer = 30
+        self.wolf_timer = 10
+        self.dead_players = []
+        self.votes= {}
+        self.winner = None
+
         self.room = room_manager.get_room(room_id)
+        self.current_turn = 0
 
     async def start_game(self):
         self.running = True
 
-        while self.running and self.timer > 0:
-            await asyncio.sleep(1)
-            self.chat_timer -= 1
+        # start Game
+        await self.room.broadcast(Message(
+            sender = "host",
+            type = "",
+            text = ""
+        ))
 
-            if self.timer == 0:
-                self.running = False
+        # select player for wolf role
+        await self.choose_wolf()
 
-    def end_game(self):
+        # wait 
+        await asyncio.sleep(3)
+
+        # set thema
+        await self.assign_roles()
+
+        # wait for check thema
+        await asyncio.sleep(self.check_timer)
+
+        # start Game!
+        while self.running and len(self.players) > 1:
+            await self.start_chat_round()
+
+            await self.start_vote_round()
+
+            if self.check_game_end():
+                break
+
+            await self.start_wolf_round()
+
+            if self.check_game_end():
+                break
+
+        await self.end_game()
+
+    async def choose_wolf(self):
+        # set wolf
+        self.players = self.room.players[:]
+        self.wolf = random.choice(self.players)
+
+        # notify to player who roles wolf
+        await self.room.broadcast_to_user(self.wolf, Message(
+            sender = "",
+            type = "",
+            text = ""
+        ))
+
+    async def assign_roles(self):
+        # notify to Players who pigs
+        for player in self.players:
+            if player == self.wolf:
+                await self.room.broadcast_to_user(player, Message(
+                    # alert topic
+                    sender = "",
+                    type = "",
+                    text = ""
+                ))
+            else: # that pigs
+                await self.room.broadcast_to_user(player, Message(
+                    # alert topic
+                    sender = "",
+                    type = "",
+                    text = ""
+                ))
+
+    async def start_chat_round(self):
+        # random
+        self.current_turn = random.randint(0, len(self.players) - 1) # set index for first
+        turn_count = 0 # check turn
+
+        # all player chatt start
+        while self.running and len(self.players) > 1:
+            current_player = self.players[self.current_turn]
+            # broad cast who turns
+            await self.room.broadcast(Message(
+                sender = "",
+                type = "",
+                text = ""
+            ))
+
+            # wait
+            await asyncio.sleep(self.chat_timer)
+
+            # chat end
+            await self.room.broadcast(Message(
+                sender = "",
+                type = "",
+                text = ""
+            ))
+
+            turn_count += 1
+
+            # next player
+            self.current_turn = (self.current_turn + 1) % len(self.players)
+
+            # check vote
+            if turn_count == len(self.players):
+                return
+
+    async def start_vote_round(self):
+        # start vote
+        await self.room.broadcast(Message(
+            sender = "",
+            type = "",
+            text = ""
+        ))
+
+        self.votes = {player: 0 for player in self.players}
+
+        # wait for vote
+        await asyncio.sleep(self.vote_timer)
+
+        # result after vote
+        most_voted_player = self.calculate_votes()
+
+        await self.room.broadcast(Message(
+            sender = "",
+            type = "",
+            text = ""
+        ))
+
+        # check kill to many vote player
+        if most_voted_player:
+            await self.kill_player(most_voted_player)
+
+    async def start_wolf_round(self):
+        self.wolf_choice = None
+        if self.wolf in self.players:
+            await self.room.broadcast_to_user(self.wolf, Message(
+                sender="",
+                type="",
+                text=""
+            ))
+
+            await asyncio.sleep(self.wolf_timer)
+
+            # select player who eliminate pig
+            chosen_victim = self.wolf_choice if self.wolf_choice else self.wolf_choose_victim()
+            if chosen_victim:
+                await self.kill_player(chosen_victim)
+                await self.room.broadcast(Message(
+                    sender="",
+                    type="",
+                    text=""
+                ))
+
+    def wolf_choose_victim(self):
+        available_targets = [player for player in self.players if player != self.wolf]
+        return random.choice(available_targets) if available_targets else None
+
+    def receive_wolf_choice(self,chosen_victim : str):
+        if chosen_victim in self.players and chosen_victim != self.wolf:
+            self.wolf_choice = chosen_victim
+
+    def receive_vote(self, voter_id: str, voted_player: str):
+        if voted_player in self.votes:
+            self.votes[voted_player] += 1
+    
+    async def kill_player(self, player):
+        self.players.remove(player)
+        self.dead_players.append(player)
+
+        await self.room.broadcast(Message(
+            sender = "",
+            type = "",
+            text = ""
+        ))
+
+    def calculate_votes(self):
+        if not self.votes:
+            return None
+        
+        max_votes = max(self.votes.values())
+
+        most_voted_players = [player for player, count in self.votes.items() if count == max_votes]
+
+        if len(most_voted_players) > 1:
+            return None
+ 
+        return most_voted_players[0]
+    
+    async def check_game_end(self):
+        num_alive = len(self.players)
+        if self.wolf not in self.players:
+            self.winner = "pigs"
+            return True
+        elif num_alive == 2 and self.wolf in self.players:
+            self.winner = "wolf"
+            return True
+        return False
+
+    async def end_game(self):
         self.running = False
+        # who's the win?
+        await self.room.broadcast(Message(
+            sender = "",
+            type = "",
+            text = ""
+        ))
+
+        # 데이터베이스에서 RoomState를 False로 업데이트
+        room_ref = firestore_client.collection("Room").document(self.room_id)
+        room_ref.update({"RoomState": False})
+
+        game_manager.end_game(self.room_id)
 
 class GameManager:
     def __init__(self) -> None:
