@@ -222,13 +222,13 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
                 "RoomHostID": room_data["RoomHostID"]
             })
 
-            await room.broadcast({
+            await room.broadcast(
                 Message(
                                         sender="host",  # "host"가 발신자를 의미
                                         text=f"change the RoomHost {room_data["RoomHostID"]}",  # 전송할 텍스트 내용
                                         type="notification"  # 메시지 유형을 나타냄
                                     )
-            })
+            )
 
 async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_ref, user_id: str):
     """
@@ -247,11 +247,11 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
                 if not room.in_game:
                     await room.broadcast_message(message)
                 else:
-                    await websocket.send_text(json.dumps({
-                            "sender": "host",
-                            "type": "room_info",
-                            "text": "room_data"
-                        }))
+                    await websocket.send_text(Message(
+                            sender = "host",
+                            type = "room_info",
+                            text = "room_data"
+                        ).json())
                     
             elif message.type == "leave":
                 if not room_ref.get().exists:
