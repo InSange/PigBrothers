@@ -47,6 +47,14 @@ export const ChattingContainerTitle = styled.div`
   color: #000;
   font-weight: bold;
 `;
+export const Chats = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+`;
 
 export const ChatBubble = styled.div`
   border-radius: 16px;
@@ -58,6 +66,11 @@ export const ChatBubble = styled.div`
 `;
 export const UserChatBubble = styled(ChatBubble)`
   padding: 8px 8px;
+`;
+export const HostChatBubble = styled.div`
+  width: 100%;
+  height: 24px;
+  text-align: center;
 `;
 export const MyChatBubble = styled(ChatBubble)`
   margin-left: auto;

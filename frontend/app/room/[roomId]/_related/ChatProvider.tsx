@@ -1,9 +1,18 @@
 'use client';
 
 import { GlobalContext } from '@/app/GlobalContext';
+import { MANAGER } from '@/constant';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
-import { createContext, ReactNode, useContext, useMemo, useState } from 'react';
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import createWebSocket from './websocket';
 
 export type Message = {
@@ -24,52 +33,54 @@ export const ChatContext = createContext<ChatContextType>({
   handleLeaveRoom: () => {},
 });
 
-import { useEffect, useRef } from 'react';
-
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      sender: 'ff7394b6-be9e-437d-ba4e-b632c81df073',
+      text: '123',
+      type: 'chat',
+    },
+    { sender: '123', text: '밤이 되었습니다.', type: 'chat' },
+    {
+      sender: 'ff7394b6-be9e-437d-ba4e-b632c81df073',
+      text: '123',
+      type: 'chat',
+    },
+    { sender: '123', text: '123', type: 'chat' },
+    { sender: MANAGER, text: '밤이 되었습니다.', type: 'chat' },
+    { sender: MANAGER, text: '123', type: 'chat' },
+  ]);
   const socketRef = useRef<WebSocket | null>(null);
   const { userId } = useContext(GlobalContext);
   const { roomId } = useParams<{ roomId: string }>();
   const router = useRouter();
 
   useEffect(() => {
-    if (!socketRef.current) {
-      // WebSocket 초기화
-      const ws = createWebSocket(
-        `wss://wam-coin.store/ws/room/${roomId}/${userId}`
-        // `ws://localhost:8000/ws/room/${roomId}/${userId}`
-      );
-      socketRef.current = ws;
+    if (!roomId || !userId || socketRef.current) return;
 
-      ws.onopen = () => {
-        console.log('WebSocket connection established');
-      };
+    const ws = createWebSocket(
+      `wss://wam-coin.store/ws/room/${roomId}/${userId}`
+    );
+    socketRef.current = ws;
 
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-      };
-
-      ws.onclose = () => {
-        console.log('WebSocket connection closed');
-        socketRef.current = null; // 연결이 닫히면 null로 설정
-      };
-
-      ws.onmessage = (event) => {
-        const message: Message = JSON.parse(event.data);
-        console.log(message);
-        setMessages((prev) => [...prev, message]);
-      };
-    }
+    ws.onopen = () => console.log('WebSocket connection established');
+    ws.onerror = (error) => console.error('WebSocket error:', error);
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+      socketRef.current = null;
+    };
+    ws.onmessage = (event) => {
+      const message: Message = JSON.parse(event.data);
+      setMessages((prev) => [...prev, message]);
+    };
 
     return () => {
-      // 컴포넌트 언마운트 시 WebSocket 닫기
       if (socketRef.current) {
         socketRef.current.close();
         socketRef.current = null;
       }
     };
-  }, []);
+  }, [roomId, userId]);
 
   const handleLeaveRoom = async () => {
     if (!userId) {
@@ -79,13 +90,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       setMessages([]);
-      if (
-        socketRef.current &&
-        socketRef.current.readyState === WebSocket.OPEN
-      ) {
+      if (socketRef.current?.readyState === WebSocket.OPEN) {
         socketRef.current.send(JSON.stringify({ type: 'leave' }));
-        router.push('/home');
       }
+      router.push('/home');
     } catch (error) {
       enqueueSnackbar({
         variant: 'error',
@@ -95,9 +103,15 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendMessage = ({ sender, text, type = 'chat' }: Message) => {
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
-      socketRef.current.send(JSON.stringify({ sender, text, type }));
+    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
+      enqueueSnackbar({
+        variant: 'error',
+        message: 'WebSocket 연결이 없습니다. 메시지를 보낼 수 없습니다.',
+      });
+      return;
     }
+
+    socketRef.current.send(JSON.stringify({ sender, text, type }));
   };
 
   const value = useMemo(

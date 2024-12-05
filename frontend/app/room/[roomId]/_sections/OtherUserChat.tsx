@@ -12,8 +12,8 @@ const OtherUserChat = ({ message }: { message: Message }) => {
     <UserChatBubble>
       <ChatImage src={'/pig.png'} />
       <ChatInfoContainer>
-        <ChatName>유저 이름</ChatName>
-        <ChatContent>상대방 채팅</ChatContent>
+        <ChatName>{message.sender}</ChatName>
+        <ChatContent>{message.text}</ChatContent>
       </ChatInfoContainer>
     </UserChatBubble>
   );

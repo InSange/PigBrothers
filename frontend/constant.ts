@@ -3,3 +3,5 @@ export const QUERY_KEY = {
   GET_ALL_ROOMS: 'GET_ALL_ROOMS',
   GET_ITEMS_BY_REALTIME: 'GET_ITEMS_BY_REALTIME',
 };
+
+export const MANAGER = 'host';
