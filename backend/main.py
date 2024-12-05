@@ -186,7 +186,7 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
             sender= "host",
             type= "room_info",
             text= ""
-        ))
+        ).json())
 
         if is_creator:
             await room.broadcast( Message(
