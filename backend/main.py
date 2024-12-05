@@ -428,7 +428,6 @@ class RoomModel(BaseModel):
     RoomState: bool = False 
     RoomHostID: str 
     UserList: List[str] = []
-    SessionID: str = None 
 """
 Room API START
 """
@@ -485,7 +484,7 @@ async def start_game(room_id: str):
             text = "The game has started!"
         ))
 
-        return {"message": f"Game started for Room '{room_id}', session has been reset"}
+        return {"message": f"Game started for Room '{room_id}'"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -506,15 +505,7 @@ async def end_game(room_id: str):
         room_data["RoomState"] = False
         room_ref.update({"RoomState": False})
 
-        session_ref = firestore_client.collection("Chat").document(room_id)
-        session_doc = session_ref.get()
-
-        if not session_doc.exists:
-            raise HTTPException(status_code=404, detail=f"session with ID '{room_id}' not found")
-
-        session_ref.update({"Messages": []})
-
-        return {"message": f"Game ended for Room '{room_id}', session has been reset"}
+        return {"message": f"Game ended for Room '{room_id}'"}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -549,9 +540,7 @@ async def leave_room(room_id: str, user_id: str):
             room_data = room_doc.to_dict()
             room_id = room_data.get("RoomID")
             doc_ref.delete() 
-            if room_id: 
-                session_ref = firestore_client.collection("Session").document(room_id)
-                session_ref.delete()
+
             return {"message": f"Room '{room_id}' has been deleted as it is empty"}
 
         room_data["UserList"] = user_list
@@ -597,46 +586,3 @@ async def join_room(room_id: str, user_id: str):
 """
 Room API END
 """
-class ChatInfo(BaseModel):
-    ChatID: str
-    Text: str
-    UserID: str
-    UserName: str
-    Time: datetime
-
-class AddSessionRequest(BaseModel):
-    ChatMessage: ChatInfo
-
-MAX_MESSAGES = 10 
-"""
-Session API START
-"""
-@app.put("/firebase/Session/{room_id}/add", tags=["Session"], summary="Add a Chat Message with FIFO")
-async def add_chat_message(room_id: str, session_request: AddSessionRequest):
-    """
-    Add a chat message to the Chat collection, maintaining a maximum of 10 messages (FIFO).
-    """
-    try:
-        doc_ref = firestore_client.collection("Session").document(room_id)
-        session_doc = doc_ref.get()
-
-        if not session_doc.exists:
-            session_data = {
-                "Messages": [session_request.ChatMessage.dict()],
-            }
-            doc_ref.set(session_data)
-        else:
-            session_data = session_doc.to_dict()
-            messages = session_data.get("Messages", [])
-
-            if len(messages) >= MAX_MESSAGES:
-                messages.pop(0)  
-            messages.append(session_request.ChatMessage.dict()) 
-
-            session_data["Messages"] = messages
-            doc_ref.update({"Messages": messages})
-
-        return {"message": "Session message added successfully", "session_id": room_id}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
