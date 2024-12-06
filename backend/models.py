@@ -14,6 +14,10 @@ class Chat(BaseMessage):
     text: str    
 
 # API 입력 및 반환 모델
+
+class UserModel(BaseModel):
+    Name: str
+    UserID: str
     
 class RoomModel(BaseModel):
     MaxUser: int = 8  
@@ -21,7 +25,7 @@ class RoomModel(BaseModel):
     RoomID: str    
     RoomState: bool = False 
     RoomHostID: str 
-    UserList: List[str] = []
+    UserList: List[UserModel] = []
 
 class Item(BaseModel):
     name: str
@@ -33,7 +37,3 @@ class ItemResponse(BaseModel):
     name: str
     price: float
     description: str = None
-
-class UserModel(BaseModel):
-    Name: str
-    UserID: str
