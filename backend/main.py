@@ -3,12 +3,11 @@ import random
 import json
 from collections import defaultdict
 from datetime import datetime
-from typing import Dict, List
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from firebase_config import firestore_client, realtime_db
-from pydantic import BaseModel, ValidationError
+from models import *
 
 app = FastAPI(
     title="My API with Response Models",
@@ -32,11 +31,6 @@ class Player:
         self.user_id = "active" # "active", "disconnected", "eliminated"
         self.is_alive = True 
         self.vote_count = 0 
-
-class Message(BaseModel):
-    sender: str
-    text: str 
-    type: str 
 
 # Game Manager
 # Game process class
@@ -551,23 +545,6 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
 
             )
 
-
-class Item(BaseModel):
-    name: str
-    price: float
-    description: str = None
-
-class ItemResponse(BaseModel):
-    id: int
-    name: str
-    price: float
-    description: str = None
-
-class UserModel(BaseModel):
-    Name: str
-    RoomID: str
-    UserID: str
-
 """
 User API START
 """
@@ -629,23 +606,22 @@ async def update_user(item_id: str, update_data: dict):
 """
 User API END
 """
-class RoomModel(BaseModel):
-    MaxUser: int = 8  
-    Name: str 
-    RoomID: str    
-    RoomState: bool = False 
-    RoomHostID: str 
-    UserList: List[str] = []
 """
 Room API START
 """
-@app.get("/firebase/Room/{room_id}", tags=["Room"], summary="Get Current Rooms", response_model=List[RoomModel])
+@app.get("/firebase/Room/{room_id}", tags=["Room"], summary="Get Current Rooms", response_model=RoomModel)
 async def get_room_status(room_id: str):
-    room_ref = firestore_client.collection("Room").document(room_id)
-    room_doc = room_ref.get()
-    if not room_doc.exists:
-        raise HTTPException(status_code=404, detail="Room not found.")
-    return room_doc.to_dict()
+    try:
+        room_ref = firestore_client.collection("Room").document(room_id)
+        room_doc = room_ref.get()
+
+        if not room_doc.exists:
+            raise HTTPException(status_code=404, detail="Room not found.")
+        
+        return room_doc.to_dict()
+    
+    except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/firebase/Room/", tags=["Room"], summary="Get ALL Rooms", response_model=List[RoomModel])
 async def get_all_rooms():
