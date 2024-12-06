@@ -8,7 +8,8 @@ class Message(BaseModel):
     text: str
     type: str  # 예를 들어 'chat', 'game_start', 'game_end' 등의 타입을 표현
 
-
+class Alert(BaseModel):
+    text: str
 
 # API 입력 및 반환 모델
     
@@ -33,5 +34,4 @@ class ItemResponse(BaseModel):
 
 class UserModel(BaseModel):
     Name: str
-    RoomID: str
     UserID: str
