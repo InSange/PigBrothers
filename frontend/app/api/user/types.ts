@@ -1,17 +1,11 @@
-import {
-  AddChatRequest,
-  Item,
-  RoomModel,
-  UpdateUserFirebaseUserItemIdPutPayload,
-  UserModel,
-} from '@/types/Api';
+import { UpdateUserFirebaseUserItemIdPutPayload, UserModel } from '@/types/Api';
 
 export type ApiGetAddUserFirebaseUserPostParams = {
   data: UserModel;
 };
 
 export type ApiGetUserFirebaseUserUserIdGetParams = {
-  userId: string;
+  userId?: string;
 };
 
 export type ApiUpdateUserFirebaseUserItemIdPutParams = {

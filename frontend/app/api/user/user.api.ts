@@ -5,6 +5,7 @@ import {
   ApiUpdateUserFirebaseUserItemIdPutParams,
 } from './types';
 
+// Create an user
 export async function addUserFirebaseUserPost({
   data,
 }: ApiGetAddUserFirebaseUserPostParams) {
@@ -12,14 +13,17 @@ export async function addUserFirebaseUserPost({
   return response.data;
 }
 
+// Get User By Id
 export async function getUserFirebaseUserUserIdGet({
   userId,
 }: ApiGetUserFirebaseUserUserIdGetParams) {
+  if (!userId) return;
   const response =
-    await apiClient.firebase.getUserFirebaseUserUserIdGet(userId);
+    await apiClient.firebase.addUserFirebaseUserUserIdGet(userId);
   return response.data;
 }
 
+// update user
 export async function updateUserFirebaseUserItemIdPut({
   itemId,
   data,

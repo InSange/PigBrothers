@@ -1,9 +1,5 @@
-export type ApiAddRoomFirebaseRoomPostParams = {
-  query: {
-    room_name: string;
-    room_id: string;
-    user_id: string;
-  };
+export type ApiGetRoomStatusFirebaseRoomRommIdGetParams = {
+  roomId?: string;
 };
 
 export type ApiStartGameFirebaseRoomIdStartPutParams = {
