@@ -5,7 +5,7 @@ import { useContext, useState } from 'react';
 import { ChatContext } from '../_related/ChatProvider';
 
 const ChattingInput = () => {
-  const { sendMessage } = useContext(ChatContext);
+  const { sendMessage, canSpeak } = useContext(ChatContext);
   const { userId } = useContext(GlobalContext);
   const [text, setText] = useState<string>('');
 
@@ -13,7 +13,7 @@ const ChattingInput = () => {
 
   const handleSend = () => {
     if (text.trim() === '') return; // 빈 메시지는 전송하지 않음
-    sendMessage({ sender: userId, text, type: 'chat' });
+    sendMessage({ userID: userId, text, type: 'chat' });
     setText('');
   };
 
@@ -26,6 +26,7 @@ const ChattingInput = () => {
       }}
     >
       <Textfield
+        disabled={!canSpeak}
         type='text'
         value={text}
         onChange={(e) => setText(e.target.value)}
@@ -36,12 +37,14 @@ const ChattingInput = () => {
           }
         }}
       />
-      <Button
-        style={{ flexShrink: 0, width: 'fit-content' }}
-        onClick={handleSend}
-      >
-        전송
-      </Button>
+      {canSpeak && (
+        <Button
+          style={{ flexShrink: 0, width: 'fit-content' }}
+          onClick={handleSend}
+        >
+          전송
+        </Button>
+      )}
     </div>
   );
 };

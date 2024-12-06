@@ -22,7 +22,7 @@ const NameInput = () => {
     const newId = generateUUID();
 
     addUser({
-      data: { Name: name, RoomID: '', UserID: newId },
+      data: { Name: name, UserID: newId },
     }).then(() => {
       handleChangeName(newId);
       router.push('/room');

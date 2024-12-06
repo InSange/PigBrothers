@@ -25,16 +25,13 @@ const Chatting = () => {
     throw new Error('ChatMessageList must be used within a ChatProvider');
   }
 
-  console.log(messages);
-
   return (
     <ChattingContainer style={{ overflow: 'auto' }}>
       <ChattingContainerTitle>채팅창</ChattingContainerTitle>
       <Chats>
         {messages?.map((message, i) => {
-          console.log(message);
-          const isMe = message.sender === myId;
-          const isHost = message.sender === MANAGER;
+          const isMe = message.userID === myId;
+          const isHost = message.userID === MANAGER;
           return (
             <div key={i}>
               {isMe ? (
