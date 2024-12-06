@@ -3,6 +3,7 @@ import random
 import json
 from collections import defaultdict
 from datetime import datetime
+from typing import Union
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
@@ -96,28 +97,22 @@ class Game:
         self.wolf = random.choice(self.players)
 
         # notify to player who roles wolf
-        await self.room.broadcast_to_user(self.wolf, Message(
-            sender = "",
-            type = "",
-            text = ""
+        await self.room.broadcast_to_user(self.wolf, BaseMessage(
+            type = ""
         ))
 
     async def assign_roles(self):
         # notify to Players who pigs
         for player in self.players:
             if player == self.wolf:
-                await self.room.broadcast_to_user(player, Message(
+                await self.room.broadcast_to_user(player, BaseMessage(
                     # alert topic
-                    sender = "",
                     type = "",
-                    text = ""
                 ))
             else: # that pigs
-                await self.room.broadcast_to_user(player, Message(
+                await self.room.broadcast_to_user(player, BaseMessage(
                     # alert topic
-                    sender = "",
                     type = "",
-                    text = ""
                 ))
 
     async def start_chat_round(self):
@@ -129,20 +124,16 @@ class Game:
         while self.running and len(self.players) > 1:
             current_player = self.players[self.current_turn]
             # broad cast who turns
-            await self.room.broadcast(Message(
-                sender = "",
+            await self.room.broadcast(BaseMessage(
                 type = "",
-                text = ""
             ))
 
             # wait
             await asyncio.sleep(self.chat_timer)
 
             # chat end
-            await self.room.broadcast(Message(
-                sender = "",
+            await self.room.broadcast(BaseMessage(
                 type = "",
-                text = ""
             ))
 
             turn_count += 1
@@ -156,10 +147,8 @@ class Game:
 
     async def start_vote_round(self):
         # start vote
-        await self.room.broadcast(Message(
-            sender = "",
+        await self.room.broadcast(BaseMessage(
             type = "",
-            text = ""
         ))
 
         self.votes = {player: 0 for player in self.players}
@@ -170,10 +159,8 @@ class Game:
         # result after vote
         most_voted_player = self.calculate_votes()
 
-        await self.room.broadcast(Message(
-            sender = "",
+        await self.room.broadcast(BaseMessage(
             type = "",
-            text = ""
         ))
 
         # check kill to many vote player
@@ -183,10 +170,8 @@ class Game:
     async def start_wolf_round(self):
         self.wolf_choice = None
         if self.wolf in self.players:
-            await self.room.broadcast_to_user(self.wolf, Message(
-                sender="",
+            await self.room.broadcast_to_user(self.wolf, BaseMessage(
                 type="",
-                text=""
             ))
 
             await asyncio.sleep(self.wolf_timer)
@@ -195,10 +180,8 @@ class Game:
             chosen_victim = self.wolf_choice if self.wolf_choice else self.wolf_choose_victim()
             if chosen_victim:
                 await self.kill_player(chosen_victim)
-                await self.room.broadcast(Message(
-                    sender="",
+                await self.room.broadcast(BaseMessage(
                     type="",
-                    text=""
                 ))
 
     def wolf_choose_victim(self):
@@ -217,10 +200,8 @@ class Game:
         self.players.remove(player)
         self.dead_players.append(player)
 
-        await self.room.broadcast(Message(
-            sender = "",
+        await self.room.broadcast(BaseMessage(
             type = "",
-            text = ""
         ))
 
     def calculate_votes(self):
@@ -249,10 +230,8 @@ class Game:
     async def end_game(self):
         self.running = False
         # who's the win?
-        await self.room.broadcast(Message(
-            sender = "",
+        await self.room.broadcast(BaseMessage(
             type = "",
-            text = ""
         ))
 
         # 데이터베이스에서 RoomState를 False로 업데이트
@@ -303,7 +282,7 @@ class ConnectionManager:
         elif not self.active_connections:
             room_manager.delete_room(self.room_id)
 
-    async def broadcast(self, message: Message):
+    async def broadcast(self, message: BaseMessage):
         # Message 객체를 JSON으로 변환
         message_json = message.json()
 
@@ -311,14 +290,11 @@ class ConnectionManager:
         for connection in self.active_connections.values():
             await connection.send_text(message_json)
 
-    async def broadcast_to_user(self, user_id: str, message: Message):
+    async def broadcast_to_user(self, user_id: str, message: BaseMessage):
         message_json = message.json()
 
         if user_id in self.active_connections:
             await self.active_connections[user_id].send_text(message_json)
-
-    async def broadcast_message(self, message):
-        await self.broadcast(message)
 
 # 각 방에 맞는 ConnectionManager 관리
 
@@ -384,23 +360,15 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
         print("Create Room Object {}".format(room_id))
 
         # 방 정보 전송
-        await websocket.send_text(Message(
-            sender= "host",
-            type= "room_info",
-            text= ""
-        ).json())
-
         if is_creator:
-            await room.broadcast( Message(
-                                        sender="host",  # "host"가 발신자를 의미
+            await room.broadcast( Alert(
+                                        type="alert",
                                         text=f"{user_id} created and joined the room '{room_id}'.",  # 전송할 텍스트 내용
-                                        type="notification"  # 메시지 유형을 나타냄
                                     ))
         else:
-            await room.broadcast( Message(
-                                        sender="host",  # "host"가 발신자를 의미
+            await room.broadcast( Alert(
+                                        type="alert",
                                         text=f"{user_id} joined the room '{room_id}'.",  # 전송할 텍스트 내용
-                                        type="notification"  # 메시지 유형을 나타냄
                                     ))
 
         # 메시지 처리 루프
@@ -425,11 +393,10 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
             })
 
             await room.broadcast(
-                Message(
-                                        sender="host",  # "host"가 발신자를 의미
-                                        text=f"change the RoomHost {room_data["RoomHostID"]}",  # 전송할 텍스트 내용
-                                        type="notification"  # 메시지 유형을 나타냄
-                                    )
+                Alert(
+                    type="alert",
+                    text=f"change the RoomHost {room_data["RoomHostID"]}",  # 전송할 텍스트 내용
+                )
             )
 
 async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_ref, user_id: str):
@@ -443,18 +410,11 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
     try:
         while True:
             data = await websocket.receive_text()
-            message = Message.model_validate_json(data)
+            message = Chat.model_validate_json(data)
 
             if message.type == "chat":
-                if not room.in_game:
-                    await room.broadcast_message(message)
-                else:
-                    await websocket.send_text(Message(
-                            sender = "host",
-                            type = "room_info",
-                            text = "room_data"
-                        ).json())
-                    
+                await room.broadcast(message)
+
             elif message.type == "leave":
                 if not room_ref.get().exists:
                     await websocket.close(code=4000, reason="Room does not exist.")
@@ -489,37 +449,14 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
                     "RoomHostID": room_data["RoomHostID"]
                 })
 
-                # 占쏙옙占쏙옙 占쏙옙占쏙옙占썽에占쏙옙 占쏙옙 占쏙옙占쏙옙 占쏙옙占쏙옙占쏙옙트
                 await room.broadcast(
-                    Message(
-                                        sender="host",  # "host"가 발신자를 의미
-                                        text=f"host change '{room_data["RoomHostID"]}'.",  # 전송할 텍스트 내용
-                                        type="notification"  # 메시지 유형을 나타냄
-                                    )
+                    Alert(
+                        type="alert",
+                        text=f"change the RoomHost {room_data["RoomHostID"]}",  # 전송할 텍스트 내용
+                    )
                 )
 
                 await websocket.close(code=1000, reason="You have left the room.")
-
-            elif message.type == "start_game":
-                if not room.in_game:
-                    room.in_game = True
-                    await room.broadcast(
-                        Message(
-                                        sender="host",  # "host"가 발신자를 의미
-                                        text=f"Game has started!",  # 전송할 텍스트 내용
-                                        type="notification"  # 메시지 유형을 나타냄
-                                    ))
-                    room_ref.update({"RoomState": True})
-
-            elif message.type == "end_game":
-                room.in_game = False
-                await room.broadcast(
-                    Message(
-                                        sender="host",  # "host"가 발신자를 의미
-                                        text=f"Game has ended!",  # 전송할 텍스트 내용
-                                        type="notification"  # 메시지 유형을 나타냄
-                                    ))
-                room_ref.update({"RoomState": False})
 
     except WebSocketDisconnect:
         room.disconnect(websocket, user_id)
@@ -537,12 +474,10 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
                 room_ref.update({"RoomHostID": room.room_host})
 
             await room.broadcast(
-                Message(
-                                        sender="host",  # "host"가 발신자를 의미
-                                        text=f"update_room {room.room_host}",  # 전송할 텍스트 내용
-                                        type="notification"  # 메시지 유형을 나타냄
-                                    )
-
+                Alert(
+                    type="alert",
+                    text=f"change the RoomHost {room_data["RoomHostID"]}",  # 전송할 텍스트 내용
+                )
             )
 
 """
@@ -662,11 +597,12 @@ async def start_game(room_id: str):
         room_ref.update({"RoomState": True})
 
         # WebSocket으로 브로드캐스트
-        await room.broadcast(Message(
-            sender = "host",
-            type = "game_start",
-            text = "The game has started!"
-        ))
+        await room.broadcast(
+                Alert(
+                    type= "alert",
+                    text= "Lets Game Start!!!",  # 전송할 텍스트 내용
+                )
+            )
 
         return {"message": f"Game started for Room '{room_id}'"}
 
