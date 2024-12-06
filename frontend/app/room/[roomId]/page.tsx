@@ -7,7 +7,7 @@ import { GlobalContext } from '@/app/GlobalContext';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import { useContext, useEffect } from 'react';
-import { ChatContext, ChatProvider } from './_related/ChatProvider';
+import { ChatContext } from './_related/ChatProvider';
 import { SessionContentContainer } from './_related/session.styled';
 import Chatting from './_sections/Chatting';
 import ChattingInput from './_sections/ChattingInput';
@@ -25,14 +25,9 @@ const Page = () => {
       enqueueSnackbar({ variant: 'error', message: '유저 정보가 없습니다.' });
       return router.push('/home');
     }
-
-    // joinSession({
-    //   roomId,
-    //   query: {
-    //     user_id: userId,
-    //   },
-    // });
   }, []);
+
+  if (!roomId) return;
 
   const handleGotoBack = () => {
     if (!userId) {
@@ -49,17 +44,15 @@ const Page = () => {
   };
 
   return (
-    <ChatProvider>
-      <Layout style={{ height: '100vh' }}>
-        <PigHeader onClick={handleGotoBack} />
-        <SessionContentContainer>
-          <Users />
-          <Button onClick={handleStartGame}>게임 시작</Button>
-          <Chatting />
-          <ChattingInput />
-        </SessionContentContainer>
-      </Layout>
-    </ChatProvider>
+    <Layout style={{ height: '100vh' }}>
+      <PigHeader onClick={handleGotoBack} />
+      <SessionContentContainer>
+        <Users />
+        <Button onClick={handleStartGame}>게임 시작</Button>
+        <Chatting />
+        <ChattingInput />
+      </SessionContentContainer>
+    </Layout>
   );
 };
 

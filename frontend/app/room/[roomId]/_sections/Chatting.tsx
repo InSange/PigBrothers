@@ -1,16 +1,19 @@
 import { GlobalContext } from '@/app/GlobalContext';
+import { MANAGER } from '@/constant';
 import { useContext, useEffect, useRef } from 'react';
 import { ChatContext } from '../_related/ChatProvider';
 import {
+  Chats,
   ChattingContainer,
   ChattingContainerTitle,
 } from '../_related/session.styled';
+import HostChat from './HostChat';
 import MyChat from './MyChat';
 import OtherUserChat from './OtherUserChat';
 
 const Chatting = () => {
   const { messages } = useContext(ChatContext);
-  const { userId } = useContext(GlobalContext);
+  const { userId: myId } = useContext(GlobalContext);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // 새로운 메시지가 추가되면 스크롤을 최신 메시지로 이동
@@ -27,14 +30,17 @@ const Chatting = () => {
   return (
     <ChattingContainer style={{ overflow: 'auto' }}>
       <ChattingContainerTitle>채팅창</ChattingContainerTitle>
-      <div>
+      <Chats>
         {messages?.map((message, i) => {
           console.log(message);
-          const isMe = message.sender === userId;
+          const isMe = message.sender === myId;
+          const isHost = message.sender === MANAGER;
           return (
             <div key={i}>
               {isMe ? (
                 <MyChat message={message} />
+              ) : isHost ? (
+                <HostChat message={message} />
               ) : (
                 <OtherUserChat message={message} />
               )}
@@ -42,7 +48,7 @@ const Chatting = () => {
           );
         })}
         <div ref={messagesEndRef} />
-      </div>
+      </Chats>
     </ChattingContainer>
   );
 };

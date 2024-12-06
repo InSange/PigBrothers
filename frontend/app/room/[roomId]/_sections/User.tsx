@@ -1,8 +1,9 @@
 'use client';
+import { RoomModel } from '@/types/Api';
 import { useState } from 'react';
 import { UserCard, UserImage, UserName } from '../_related/session.styled';
 
-const User = () => {
+const User = ({ user }: { user: RoomModel }) => {
   const [isLiarMemo, setIsLiarMemo] = useState(false);
   const handleToggleMemo = () => {
     setIsLiarMemo((prevMemo) => !prevMemo);
