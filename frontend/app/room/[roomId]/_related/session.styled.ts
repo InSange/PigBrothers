@@ -69,7 +69,7 @@ export const UserChatBubble = styled(ChatBubble)`
 `;
 export const HostChatBubble = styled.div`
   width: 100%;
-  height: 24px;
+  min-height: 24px;
   text-align: center;
 `;
 export const MyChatBubble = styled(ChatBubble)`

@@ -1,7 +1,6 @@
 'use client';
 
 import { GlobalContext } from '@/app/GlobalContext';
-import { MANAGER } from '@/constant';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import {
@@ -17,7 +16,7 @@ import {
 export type MessageType = 'chat' | 'start_game' | 'end_game';
 
 export interface Message {
-  sender: string;
+  userID: string;
   text: string;
   type: MessageType;
 }
@@ -26,38 +25,40 @@ interface ChatContextType {
   messages: Message[];
   sendMessage: (message: Message) => void;
   handleLeaveRoom: () => Promise<void>;
+  canSpeak: boolean;
+  canVote: boolean;
+  subject: string | null;
+  isLiar: boolean;
 }
 
-const INITIAL_MESSAGES: Message[] = [
-  {
-    sender: 'ff7394b6-be9e-437d-ba4e-b632c81df073',
-    text: '123',
-    type: 'chat',
-  },
-  { sender: '123', text: '밤이 되었습니다.', type: 'chat' },
-  {
-    sender: 'ff7394b6-be9e-437d-ba4e-b632c81df073',
-    text: '123',
-    type: 'chat',
-  },
-  { sender: '123', text: '123', type: 'chat' },
-  { sender: MANAGER, text: '밤이 되었습니다.', type: 'chat' },
-  { sender: MANAGER, text: '123', type: 'chat' },
-];
+export interface User {
+  userId: string;
+  name: string;
+  memo: 'wolf' | 'pig';
+}
 
 export const ChatContext = createContext<ChatContextType>({
   messages: [],
   sendMessage: () => {},
   handleLeaveRoom: async () => {},
+  canSpeak: false,
+  canVote: false,
+  subject: null,
+  isLiar: false,
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
+  const [messages, setMessages] = useState<Message[]>([]);
   const { userId } = useContext(GlobalContext);
   const { roomId } = useParams<{ roomId: string }>();
   const router = useRouter();
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
+  const [canSpeak, setCanSpeak] = useState(false);
+  const [canVote, setCanVote] = useState(false);
+  const [subject, setSubject] = useState<string | null>(null);
+  const [isLiar, setIsLiar] = useState<boolean>(false);
+  const [currentUserList, setCurrentUserList] = useState<User[]>([]);
 
   useEffect(() => {
     if (!roomId || !userId || isConnecting || wsRef.current) return;
@@ -93,7 +94,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       wsRef.current.onmessage = (event) => {
         try {
           const message: Message = JSON.parse(event.data);
-          setMessages((prev) => [...prev, message]);
+          setMessages((prev: Message[]) => [...(prev ?? []), message]);
         } catch (error) {
           console.error('Error parsing message:', error);
         }
@@ -131,7 +132,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const sendMessage = ({ sender, text, type = 'chat' }: Message) => {
+  const sendMessage = ({ userID: sender, text, type = 'chat' }: Message) => {
     if (!wsRef.current) {
       enqueueSnackbar({
         variant: 'error',
@@ -163,8 +164,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       messages,
       sendMessage,
       handleLeaveRoom,
+      canSpeak,
+      canVote,
+      subject,
+      isLiar,
     }),
-    [messages]
+    [messages, canSpeak, canVote, subject, isLiar]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
