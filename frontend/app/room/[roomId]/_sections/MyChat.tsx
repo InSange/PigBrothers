@@ -1,6 +1,5 @@
 import { useGetRoomStatusFirebaseRoomRoomIdGet } from '@/app/api/room/hooks/useQueryRoom';
 import { useParams } from 'next/navigation';
-import { Message } from '../_related/ChatProvider';
 import {
   ChatContent,
   ChatImage,
@@ -8,8 +7,9 @@ import {
   ChatName,
   MyChatBubble,
 } from '../_related/session.styled';
+import { ChatMessage } from '../_related/type';
 
-const MyChat = ({ message }: { message: Message }) => {
+const MyChat = ({ message }: { message: ChatMessage }) => {
   const { roomId } = useParams<{ roomId: string }>();
   const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
     roomId,

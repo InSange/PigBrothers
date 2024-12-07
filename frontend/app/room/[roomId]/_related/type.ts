@@ -38,3 +38,4 @@ export type Message =
     };
 export type ChatOrAlertMessage = Extract<Message, { type: 'chat' | 'alert' }>;
 export type ChatMessage = Extract<ChatOrAlertMessage, { type: 'chat' }>;
+export type AlertMessage = Extract<ChatOrAlertMessage, { type: 'alert' }>;
