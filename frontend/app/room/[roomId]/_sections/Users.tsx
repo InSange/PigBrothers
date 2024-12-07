@@ -1,24 +1,18 @@
 'use client';
 import { AlignCenterRowStack } from '@/app/_components/common';
-import { useGetRoomStatusFirebaseRoomRoomIdGet } from '@/app/api/room/hooks/useQueryRoom';
-import { UserModel } from '@/types/Api';
-import { useParams } from 'next/navigation';
+import { useContext } from 'react';
+import { ChatContext, User } from '../_related/ChatProvider';
 import { UserCard, UserImage } from '../_related/session.styled';
-import User from './User';
+import { UserComponent } from './UserComponent';
 
 const Users = () => {
-  const { roomId } = useParams<{ roomId: string }>();
-  const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
-    roomId,
-  });
-  const currentUsers = currentRoom?.UserList ?? [];
-
+  const { currentUserList } = useContext(ChatContext);
   const MAX_USERS = 8;
   const USERS_PER_ROW = 4;
 
-  const remainingSlots = MAX_USERS - currentUsers.length;
-  const allSlots: UserModel[] = [
-    ...currentUsers,
+  const remainingSlots = MAX_USERS - currentUserList.length;
+  const allSlots: User[] = [
+    ...currentUserList,
     ...Array(remainingSlots).fill(null),
   ];
 
@@ -34,7 +28,7 @@ const Users = () => {
         <AlignCenterRowStack key={rowIndex} style={{ gap: '8px' }}>
           {row.map((user, userIndex) =>
             user ? (
-              <User key={userIndex} user={user} />
+              <UserComponent key={userIndex} user={user} />
             ) : (
               <UserCard key={userIndex}>
                 <UserImage src={'/x.png'} />

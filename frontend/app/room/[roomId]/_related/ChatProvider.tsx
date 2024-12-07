@@ -3,6 +3,7 @@
 import { useGetRoomStatusFirebaseRoomRoomIdGet } from '@/app/api/room/hooks/useQueryRoom';
 import { GlobalContext } from '@/app/GlobalContext';
 import { ALERT, CHAT, PROCESS, ROLE, STATE } from '@/constant';
+import { UserModel } from '@/types/Api';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import {
@@ -28,11 +29,11 @@ interface ChatContextType {
   canVote: boolean;
   subject: string | null;
   isLiar: boolean;
+  currentUserList: User[];
+  handleChangeUserMemo: (userID: string) => void;
 }
 
-export interface User {
-  userId: string;
-  name: string;
+export interface User extends UserModel {
   memo: 'wolf' | 'pig';
 }
 
@@ -44,6 +45,8 @@ export const ChatContext = createContext<ChatContextType>({
   canVote: false,
   subject: null,
   isLiar: false,
+  currentUserList: [],
+  handleChangeUserMemo: () => {},
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
@@ -58,7 +61,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [canKill, setCanKill] = useState(false);
   const [subject, setSubject] = useState<string | null>(null);
   const [isLiar, setIsLiar] = useState<boolean>(false);
-  const [currentUserList, setCurrentUserList] = useState<User[]>([]);
   const [background, setBackground] = useState<
     'start' | 'dayTime' | 'night' | 'vote' | 'end'
   >();
@@ -66,17 +68,32 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     roomId,
     isConnecting,
   });
+
+  const userList =
+    currentRoom?.UserList?.map((user) => {
+      const isMe = user.UserID === userId;
+
+      return {
+        ...user,
+        memo: isMe && isLiar ? 'wolf' : ('pig' as User['memo']),
+      };
+    }) ?? [];
+  const [currentUserList, setCurrentUserList] = useState<User[]>(userList);
   const isGameStarted = currentRoom?.RoomState;
 
   useEffect(() => {
+    // 게임이 시작 되지 않은 상태(대기실)면, 말할 수 있음
+    if (!isGameStarted) {
+      setCanSpeak(true);
+    }
+
+    // 유저 리스트 업데이트
+    setCurrentUserList(userList);
+
     if (!roomId || !userId || isConnecting || wsRef.current) return;
 
     const connectWebSocket = () => {
       setIsConnecting(true);
-
-      if (!isGameStarted) {
-        setCanSpeak(true);
-      }
 
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         setIsConnecting(false);
@@ -150,7 +167,20 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
       setIsConnecting(false);
     };
-  }, [roomId, userId, isConnecting]);
+  }, [roomId, userId, isConnecting, currentRoom]);
+
+  const handleChangeUserMemo: ChatContextType['handleChangeUserMemo'] = (
+    userID
+  ) => {
+    setCurrentUserList((prev) =>
+      prev.map((user) =>
+        user.UserID === userID
+          ? { ...user, memo: user.memo === 'pig' ? 'wolf' : 'pig' }
+          : user
+      )
+    );
+  };
+
   const handleLeaveRoom = async () => {
     if (!userId) {
       enqueueSnackbar({ variant: 'error', message: '유저 정보가 없습니다.' });
@@ -207,12 +237,14 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       messages,
       sendMessage,
       handleLeaveRoom,
+      handleChangeUserMemo,
       canSpeak,
       canVote,
       subject,
       isLiar,
+      currentUserList,
     }),
-    [messages, canSpeak, canVote, subject, isLiar]
+    [messages, canSpeak, canVote, subject, isLiar, currentUserList]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
