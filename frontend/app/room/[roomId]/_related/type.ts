@@ -36,3 +36,5 @@ export type Message =
       type: 'kill';
       userID: string;
     };
+export type ChatOrAlertMessage = Extract<Message, { type: 'chat' | 'alert' }>;
+export type ChatMessage = Extract<ChatOrAlertMessage, { type: 'chat' }>;

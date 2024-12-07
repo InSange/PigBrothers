@@ -5,7 +5,6 @@ export const QUERY_KEY = {
   GET_ITEMS_BY_REALTIME: 'GET_ITEMS_BY_REALTIME',
 };
 
-export const MANAGER = 'alert';
 export const STATE = 'state';
 export const ROLE = 'role';
 export const PROCESS = 'process';

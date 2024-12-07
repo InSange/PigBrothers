@@ -1,5 +1,5 @@
 import { GlobalContext } from '@/app/GlobalContext';
-import { MANAGER } from '@/constant';
+import { ALERT } from '@/constant';
 import { useContext, useEffect, useRef } from 'react';
 import { ChatContext } from '../_related/ChatProvider';
 import {
@@ -7,6 +7,7 @@ import {
   ChattingContainer,
   ChattingContainerTitle,
 } from '../_related/session.styled';
+import { ChatOrAlertMessage } from '../_related/type';
 import HostChat from './HostChat';
 import MyChat from './MyChat';
 import OtherUserChat from './OtherUserChat';
@@ -29,21 +30,26 @@ const Chatting = () => {
     <ChattingContainer style={{ overflow: 'auto' }}>
       <ChattingContainerTitle>채팅창</ChattingContainerTitle>
       <Chats>
-        {messages?.map((message, i) => {
-          const isMe = message.userID === myId;
-          const isHost = message.type === MANAGER;
-          return (
-            <div key={i}>
-              {isMe ? (
-                <MyChat message={message} />
-              ) : isHost ? (
-                <HostChat message={message} />
-              ) : (
-                <OtherUserChat message={message} />
-              )}
-            </div>
-          );
-        })}
+        {messages
+          ?.filter(
+            (message): message is ChatOrAlertMessage =>
+              message.type === 'chat' || message.type === 'alert'
+          )
+          .map((message, i) => {
+            const isMe = message.type === 'chat' && message.userID === myId;
+            const isHost = message.type === ALERT;
+            return (
+              <div key={i}>
+                {isMe ? (
+                  <MyChat message={message} />
+                ) : isHost ? (
+                  <HostChat message={message} />
+                ) : (
+                  <OtherUserChat message={message} />
+                )}
+              </div>
+            );
+          })}
         <div ref={messagesEndRef} />
       </Chats>
     </ChattingContainer>
