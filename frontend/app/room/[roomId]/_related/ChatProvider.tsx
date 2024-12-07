@@ -1,6 +1,8 @@
 'use client';
 
+import { useGetRoomStatusFirebaseRoomRoomIdGet } from '@/app/api/room/hooks/useQueryRoom';
 import { GlobalContext } from '@/app/GlobalContext';
+import { ALERT, CHAT, PROCESS, ROLE, STATE } from '@/constant';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import {
@@ -12,18 +14,15 @@ import {
   useRef,
   useState,
 } from 'react';
-
-export type MessageType = 'chat' | 'start_game' | 'end_game';
-
-export interface Message {
-  userID: string;
-  text: string;
-  type: MessageType;
-}
+import { Message } from './type';
 
 interface ChatContextType {
   messages: Message[];
-  sendMessage: (message: Message) => void;
+  sendMessage: ({}: {
+    userID: string;
+    text: string;
+    type: Message['type'];
+  }) => void;
   handleLeaveRoom: () => Promise<void>;
   canSpeak: boolean;
   canVote: boolean;
@@ -48,7 +47,7 @@ export const ChatContext = createContext<ChatContextType>({
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatContextType['messages']>([]);
   const { userId } = useContext(GlobalContext);
   const { roomId } = useParams<{ roomId: string }>();
   const router = useRouter();
@@ -56,15 +55,28 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [isConnecting, setIsConnecting] = useState(false);
   const [canSpeak, setCanSpeak] = useState(false);
   const [canVote, setCanVote] = useState(false);
+  const [canKill, setCanKill] = useState(false);
   const [subject, setSubject] = useState<string | null>(null);
   const [isLiar, setIsLiar] = useState<boolean>(false);
   const [currentUserList, setCurrentUserList] = useState<User[]>([]);
+  const [background, setBackground] = useState<
+    'start' | 'dayTime' | 'night' | 'vote' | 'end'
+  >();
+  const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
+    roomId,
+    isConnecting,
+  });
+  const isGameStarted = currentRoom?.RoomState;
 
   useEffect(() => {
     if (!roomId || !userId || isConnecting || wsRef.current) return;
 
     const connectWebSocket = () => {
       setIsConnecting(true);
+
+      if (!isGameStarted) {
+        setCanSpeak(true);
+      }
 
       if (wsRef.current?.readyState === WebSocket.OPEN) {
         setIsConnecting(false);
@@ -94,7 +106,35 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       wsRef.current.onmessage = (event) => {
         try {
           const message: Message = JSON.parse(event.data);
-          setMessages((prev: Message[]) => [...(prev ?? []), message]);
+
+          if (message.type === CHAT || message.type === ALERT) {
+            setMessages((prev: Message[]) => [...(prev ?? []), message]);
+          } else if (message.type === STATE) {
+            setCanSpeak(message.speak);
+          } else if (message.type === ROLE) {
+            setIsLiar(message.role === 'wolf');
+            setSubject(message.word);
+          } else if (message.type === PROCESS) {
+            if (message.state === 'start') {
+              setBackground('start');
+              setCanSpeak(false);
+            }
+            if (message.state === 'dayTime') {
+              setBackground('dayTime');
+            }
+            if (message.state === 'vote') {
+              setBackground('vote');
+              setCanSpeak(false);
+              setCanVote(true);
+            }
+            if (message.state === 'night') {
+              setBackground('night');
+              isLiar && setCanKill(true);
+            }
+            if (message.state === 'end') {
+              setBackground('end');
+            }
+          }
         } catch (error) {
           console.error('Error parsing message:', error);
         }
@@ -111,7 +151,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       setIsConnecting(false);
     };
   }, [roomId, userId, isConnecting]);
-
   const handleLeaveRoom = async () => {
     if (!userId) {
       enqueueSnackbar({ variant: 'error', message: '유저 정보가 없습니다.' });
@@ -132,7 +171,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const sendMessage = ({ userID: sender, text, type = 'chat' }: Message) => {
+  const sendMessage: ChatContextType['sendMessage'] = ({
+    userID,
+    text,
+    type = CHAT,
+  }) => {
     if (!wsRef.current) {
       enqueueSnackbar({
         variant: 'error',
@@ -143,7 +186,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       if (wsRef.current.readyState === WebSocket.OPEN) {
-        wsRef.current.send(JSON.stringify({ sender, text, type }));
+        wsRef.current.send(JSON.stringify({ userID, text, type }));
       } else {
         enqueueSnackbar({
           variant: 'error',

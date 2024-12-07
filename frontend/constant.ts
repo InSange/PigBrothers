@@ -6,3 +6,11 @@ export const QUERY_KEY = {
 };
 
 export const MANAGER = 'alert';
+export const STATE = 'state';
+export const ROLE = 'role';
+export const PROCESS = 'process';
+export const CHAT = 'chat';
+export const ALERT = 'alert';
+export const LEAVE = 'leave';
+export const VOTE = 'vote';
+export const KILL = 'kill';

@@ -15,9 +15,10 @@ export function useGetAllRoomsFirebaseRoomGet() {
 
 export function useGetRoomStatusFirebaseRoomRoomIdGet({
   roomId,
-}: ApiGetRoomStatusFirebaseRoomRommIdGetParams) {
+  isConnecting,
+}: ApiGetRoomStatusFirebaseRoomRommIdGetParams & { isConnecting?: boolean }) {
   return useQuery({
-    queryKey: [QUERY_KEY.GET_ROOM_STATUS, roomId],
+    queryKey: [QUERY_KEY.GET_ROOM_STATUS, roomId, isConnecting],
     queryFn: () => getRoomStatusFirebaseRoomRoomIdGet({ roomId }),
   });
 }

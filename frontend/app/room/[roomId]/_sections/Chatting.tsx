@@ -31,7 +31,7 @@ const Chatting = () => {
       <Chats>
         {messages?.map((message, i) => {
           const isMe = message.userID === myId;
-          const isHost = message.userID === MANAGER;
+          const isHost = message.type === MANAGER;
           return (
             <div key={i}>
               {isMe ? (

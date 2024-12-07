@@ -10,7 +10,7 @@ export const SessionContentContainer = styled(ContentContainer)`
 
 export const UserCard = styled.div`
   flex: 1;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   display: flex;
   flex-direction: column;

@@ -1,6 +1,7 @@
 'use client';
 import { AlignCenterRowStack } from '@/app/_components/common';
 import { useGetRoomStatusFirebaseRoomRoomIdGet } from '@/app/api/room/hooks/useQueryRoom';
+import { UserModel } from '@/types/Api';
 import { useParams } from 'next/navigation';
 import { UserCard, UserImage } from '../_related/session.styled';
 import User from './User';
@@ -16,7 +17,10 @@ const Users = () => {
   const USERS_PER_ROW = 4;
 
   const remainingSlots = MAX_USERS - currentUsers.length;
-  const allSlots = [...currentUsers, ...Array(remainingSlots).fill(null)];
+  const allSlots: UserModel[] = [
+    ...currentUsers,
+    ...Array(remainingSlots).fill(null),
+  ];
 
   const userRows = Array.from(
     { length: Math.ceil(allSlots.length / USERS_PER_ROW) },
@@ -32,7 +36,7 @@ const Users = () => {
             user ? (
               <User key={userIndex} user={user} />
             ) : (
-              <UserCard>
+              <UserCard key={userIndex}>
                 <UserImage src={'/x.png'} />
               </UserCard>
             )
