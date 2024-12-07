@@ -17,7 +17,6 @@ export const GlobalContextProvider = ({ children }: PropsWithChildren) => {
     if (typeof window === 'undefined') return undefined; // 서버 렌더링 방지
     try {
       const savedUser = localStorage.getItem(window.location.hostname + 'user');
-      console.log(savedUser);
       return savedUser ? savedUser : undefined;
     } catch (error) {
       console.error('Failed to parse user from localStorage:', error);

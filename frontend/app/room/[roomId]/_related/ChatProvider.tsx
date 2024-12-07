@@ -32,7 +32,9 @@ interface ChatContextType {
   currentUserList: User[];
   handleChangeUserMemo: (userID: string) => void;
   handleVote: (userID: string) => void;
+  handleKill: (userID: string) => void;
   votedId: string | null;
+  canKill: boolean;
 }
 
 export interface User extends UserModel {
@@ -51,6 +53,8 @@ export const ChatContext = createContext<ChatContextType>({
   handleChangeUserMemo: () => {},
   votedId: null,
   handleVote: () => {},
+  handleKill: () => {},
+  canKill: false,
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
@@ -137,6 +141,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             setIsLiar(message.role === 'wolf');
             setSubject(message.word);
           } else if (message.type === PROCESS) {
+            setVotedId(null);
             if (message.state === 'start') {
               setBackground('start');
               setCanSpeak(false);
@@ -208,6 +213,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   const handleVote = (userID: string) => {
     setVotedId(userID);
+    setCanVote(false);
+  };
+
+  const handleKill = (userID: string) => {
+    setVotedId(userID);
+    setCanKill(false);
   };
 
   const sendMessage: ChatContextType['sendMessage'] = ({
@@ -252,10 +263,22 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       subject,
       isLiar,
       currentUserList,
-      handleVote,
       votedId,
+      canKill,
+      handleVote,
+      handleKill,
     }),
-    [messages, canSpeak, canVote, subject, isLiar, currentUserList]
+    [
+      messages,
+      canSpeak,
+      canVote,
+      canKill,
+      subject,
+      isLiar,
+      currentUserList,
+      handleVote,
+      handleKill,
+    ]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

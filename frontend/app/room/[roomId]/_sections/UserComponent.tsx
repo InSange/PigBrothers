@@ -10,11 +10,18 @@ import {
 } from '../_related/session.styled';
 
 export const UserComponent = ({ user }: { user: User }) => {
-  const { handleChangeUserMemo, isLiar, canVote, votedId } =
-    useContext(ChatContext);
+  const {
+    handleChangeUserMemo,
+    isLiar,
+    canVote,
+    votedId,
+    canKill,
+    handleVote,
+    handleKill,
+  } = useContext(ChatContext);
   const { Name, UserID, memo } = user ?? {};
   const isWolf = memo === 'wolf';
-  const isCurrentUserVoted = votedId === UserID;
+  const isUserSelected = votedId === UserID;
 
   return (
     <UserCard>
@@ -24,8 +31,16 @@ export const UserComponent = ({ user }: { user: User }) => {
       />
       <AlignCenterRowStack style={{ gap: '4px' }}>
         <UserName>{Name}</UserName>
-        {canVote && <VoteImage src='/Box.svg' />}
-        {!canVote && isCurrentUserVoted && <VoteImage src='/check.svg' />}
+        {/* 투표 할 수 있음 */}
+        {canVote && (
+          <VoteImage onClick={() => handleVote(UserID)} src='/Box.svg' />
+        )}
+        {/* 죽일 수 있음 */}
+        {canKill && (
+          <VoteImage onClick={() => handleKill(UserID)} src='/knife.svg' />
+        )}
+        {/* 유저 선택 됨 : Kill or Vote */}
+        {isUserSelected && <VoteImage src='/check.svg' />}
       </AlignCenterRowStack>
     </UserCard>
   );
