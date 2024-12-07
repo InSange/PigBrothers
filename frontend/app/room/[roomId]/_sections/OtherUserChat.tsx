@@ -20,7 +20,7 @@ const OtherUserChat = ({ message }: { message: ChatMessage }) => {
 
   return (
     <UserChatBubble>
-      <ChatImage src={'/pig.png'} />
+      <ChatImage src={'/pig.webp'} />
       <ChatInfoContainer>
         <ChatName>{user?.Name}</ChatName>
         <ChatContent>{message.text}</ChatContent>

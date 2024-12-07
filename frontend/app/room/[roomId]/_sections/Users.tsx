@@ -6,7 +6,7 @@ import { UserCard, UserImage } from '../_related/session.styled';
 import { UserComponent } from './UserComponent';
 
 const Users = () => {
-  const { currentUserList } = useContext(ChatContext);
+  const { currentUserList, canVote } = useContext(ChatContext);
   const MAX_USERS = 8;
   const USERS_PER_ROW = 4;
 

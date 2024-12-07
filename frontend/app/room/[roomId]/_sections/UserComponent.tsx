@@ -1,17 +1,32 @@
 'use client';
+import { AlignCenterRowStack } from '@/app/_components/common';
 import { useContext } from 'react';
 import { ChatContext, User } from '../_related/ChatProvider';
-import { UserCard, UserImage, UserName } from '../_related/session.styled';
+import {
+  UserCard,
+  UserImage,
+  UserName,
+  VoteImage,
+} from '../_related/session.styled';
 
 export const UserComponent = ({ user }: { user: User }) => {
-  const { handleChangeUserMemo } = useContext(ChatContext);
+  const { handleChangeUserMemo, isLiar, canVote, votedId } =
+    useContext(ChatContext);
   const { Name, UserID, memo } = user ?? {};
   const isWolf = memo === 'wolf';
+  const isCurrentUserVoted = votedId === UserID;
 
   return (
-    <UserCard onClick={() => handleChangeUserMemo(user.UserID)}>
-      <UserImage src={isWolf ? '/wolf.png' : '/pig.png'} />
-      <UserName>{Name}</UserName>
+    <UserCard>
+      <UserImage
+        onClick={() => handleChangeUserMemo(user.UserID)}
+        src={isLiar || isWolf ? '/wolf.png' : '/pig.webp'}
+      />
+      <AlignCenterRowStack style={{ gap: '4px' }}>
+        <UserName>{Name}</UserName>
+        {canVote && <VoteImage src='/Box.svg' />}
+        {!canVote && isCurrentUserVoted && <VoteImage src='/check.svg' />}
+      </AlignCenterRowStack>
     </UserCard>
   );
 };

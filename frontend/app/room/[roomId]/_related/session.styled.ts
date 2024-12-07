@@ -14,7 +14,6 @@ export const UserCard = styled.div`
   align-items: center;
   display: flex;
   flex-direction: column;
-  cursor: pointer;
   height: 10vh;
   gap: 8px;
   min-height: 80px;
@@ -25,13 +24,20 @@ export const UserName = styled.div`
   color: #000;
 `;
 
+export const VoteImage = styled.img`
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+`;
+
 export const UserImage = styled.img`
-  width: 80%;
+  width: 70%;
   height: 8vh;
   padding: 16px;
   background-color: #fff;
   border-radius: 999999px;
   min-height: 70px;
+  cursor: pointer;
 `;
 
 export const ChattingContainer = styled.div`
@@ -86,8 +92,8 @@ export const ChatName = styled.div`
   color: #000;
 `;
 export const ChatImage = styled.img`
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 99999999px;
 `;
 export const ChatContent = styled.div`

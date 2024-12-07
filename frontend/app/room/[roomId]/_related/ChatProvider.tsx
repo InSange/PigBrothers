@@ -31,6 +31,8 @@ interface ChatContextType {
   isLiar: boolean;
   currentUserList: User[];
   handleChangeUserMemo: (userID: string) => void;
+  handleVote: (userID: string) => void;
+  votedId: string | null;
 }
 
 export interface User extends UserModel {
@@ -47,6 +49,8 @@ export const ChatContext = createContext<ChatContextType>({
   isLiar: false,
   currentUserList: [],
   handleChangeUserMemo: () => {},
+  votedId: null,
+  handleVote: () => {},
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
@@ -64,6 +68,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [background, setBackground] = useState<
     'start' | 'dayTime' | 'night' | 'vote' | 'end'
   >();
+  const [votedId, setVotedId] = useState<string | null>(null);
   const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
     roomId,
     isConnecting,
@@ -201,6 +206,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const handleVote = (userID: string) => {
+    setVotedId(userID);
+  };
+
   const sendMessage: ChatContextType['sendMessage'] = ({
     userID,
     text,
@@ -243,6 +252,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       subject,
       isLiar,
       currentUserList,
+      handleVote,
+      votedId,
     }),
     [messages, canSpeak, canVote, subject, isLiar, currentUserList]
   );
