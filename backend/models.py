@@ -13,6 +13,18 @@ class Chat(BaseMessage):
     userID: str
     text: str    
 
+class State(BaseMessage):
+    userID: str
+    speak: bool
+
+class Role(BaseMessage):
+    userID: str
+    role: str
+    word: str
+
+class Process(BaseMessage):
+    state: str
+
 # API 입력 및 반환 모델
 
 class UserModel(BaseModel):
