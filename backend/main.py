@@ -494,6 +494,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
     room_ref = firestore_client.collection("Room").document(room_id)
     """
     try:
+        print(f"Active connections room while: {len(room.active_connections)}")
         while True:
             data = await websocket.receive_text()
             message = Chat.model_validate_json(data)
