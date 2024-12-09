@@ -415,6 +415,7 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
             if any(user["UserID"] == user_id for user in room_data["UserList"]):
                 # 특정 user_id가 존재하는지 확인하고 제거
                 room_data["UserList"] = [user for user in room_data["UserList"] if user["UserID"] != user_id]
+                print("Already User Del")
             elif len(room_data["UserList"]) >= room_data["MaxUser"]:
                 print("full {}".format(user_id))
                 await websocket.close(code=4001, reason="Room is full.")
@@ -494,11 +495,12 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
 
             elif message.type == "leave":
                 if not room_ref.get().exists:
+                    print("no room")
                     await websocket.close(code=4000, reason="Room does not exist.")
                     return
 
                 room_data = room_ref.get().to_dict()
-                if any(user["UserID"] == user_id for user in room_data["UserList"]):
+                if not any(user["UserID"] == user_id for user in room_data["UserList"]):
                     await websocket.close(code=4001, reason="User is not in the room.")
                     return
 
