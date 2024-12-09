@@ -446,7 +446,7 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
                                     ))
 
         # ¸Þ½ÃÁö Ã³¸® ·çÇÁ
-        await handle_room_while(websocket, room, room_ref, user_id)
+        await handle_room_while(websocket, room,room_id, user_id)
 
     except WebSocketDisconnect:
         # ¿¬°á ÇØÁ¦ ½Ã Ã³¸®
@@ -477,7 +477,7 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
                 )
             )
 
-async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_ref, user_id: str):
+async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_id: str, user_id: str):
     """
     Player message logic process in game
 
@@ -494,6 +494,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
                 await room.broadcast(message)
 
             elif message.type == "leave":
+                room_ref = firestore_client.collection("Room").document(room_id)
                 if not room_ref.get().exists:
                     print("no room")
                     await websocket.close(code=4000, reason="Room does not exist.")
@@ -512,6 +513,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
                 ]
 
                 if not room_data["UserList"]:
+                    print("no player in leave API")
                     # ï¿½æ¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                     room_manager.delete_room(room.room_id)
                     room_ref.delete()
@@ -520,6 +522,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
 
                 # ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Î¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 if room_data["RoomHostID"] == user_id:
+                    print("room host set if leave")
                     room_data["RoomHostID"] = room_data["UserList"][0]["UserID"] 
 
                 # Firebase ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
@@ -549,6 +552,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
                 print("kill palyer")
 
     except WebSocketDisconnect:
+        room_ref = firestore_client.collection("Room").document(room_id)
         room.disconnect(websocket, user_id)
         if not room.active_connections:
             room_ref.delete()
