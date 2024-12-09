@@ -325,6 +325,12 @@ class ConnectionManager:
         return list(self.active_connections.keys())
 
     async def connect(self, websocket: WebSocket, user_id: str):
+        # 기존 연결이 있다면 닫기
+        if user_id in self.active_connections:
+            old_websocket = self.active_connections[user_id]
+            await old_websocket.close(code=1000)  # 명시적으로 WebSocket 닫기
+            print(f"Closed old WebSocket for user {user_id}.")
+        
         self.active_connections[user_id] = websocket
         if not self.room_host:
             self.room_host = user_id  # set ROOM HOST
