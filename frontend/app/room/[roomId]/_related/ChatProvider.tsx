@@ -2,7 +2,7 @@
 
 import { useGetRoomStatusFirebaseRoomRoomIdGet } from '@/app/api/room/hooks/useQueryRoom';
 import { GlobalContext } from '@/app/GlobalContext';
-import { ALERT, CHAT, PROCESS, ROLE, STATE } from '@/constant';
+import { ALERT, CHAT, LEAVE, PROCESS, ROLE, STATE } from '@/constant';
 import { UserModel } from '@/types/Api';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
@@ -199,6 +199,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       if (wsRef.current) {
+        wsRef.current.send(JSON.stringify({ userID: userId, type: LEAVE }));
         wsRef.current.close();
       }
       router.push('/home');
