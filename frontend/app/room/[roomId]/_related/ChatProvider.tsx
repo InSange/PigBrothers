@@ -2,7 +2,16 @@
 
 import { useGetRoomStatusFirebaseRoomRoomIdGet } from '@/app/api/room/hooks/useQueryRoom';
 import { GlobalContext } from '@/app/GlobalContext';
-import { ALERT, CHAT, LEAVE, PROCESS, ROLE, STATE } from '@/constant';
+import {
+  ALERT,
+  CHAT,
+  KILL,
+  LEAVE,
+  PROCESS,
+  ROLE,
+  STATE,
+  VOTE,
+} from '@/constant';
 import { UserModel } from '@/types/Api';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
@@ -214,11 +223,17 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   const handleVote = (userID: string) => {
     setVotedId(userID);
+    if (wsRef.current) {
+      wsRef.current.send(JSON.stringify({ userID, type: VOTE }));
+    }
     setCanVote(false);
   };
 
   const handleKill = (userID: string) => {
     setVotedId(userID);
+    if (wsRef.current) {
+      wsRef.current.send(JSON.stringify({ userID, type: KILL }));
+    }
     setCanKill(false);
   };
 
