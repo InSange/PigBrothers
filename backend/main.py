@@ -688,6 +688,7 @@ async def start_game(room_id: str):
     """
     try:
         print(f"Current rooms in RoomManager: {room_manager.rooms.keys()}")
+        print(f"Current rooms in RoomManager: {room_id}")
 
         room = room_manager.get_room(room_id)
         if not room:
