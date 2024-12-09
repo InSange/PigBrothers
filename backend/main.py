@@ -439,6 +439,7 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
         await room.connect(websocket, user_id)
 
         print("Create Room Object {}".format(room_id))
+        print("Room Player {}".format(len(room.active_connections)))
 
         # 방 정보 전송
         if is_creator:
@@ -688,7 +689,7 @@ async def start_game(room_id: str):
         room = room_manager.get_room(room_id)
         if not room:
             raise HTTPException(status_code = 404, detail="Room not found")
-        
+        print("Room Player {}".format(len(room.active_connections)))
         if len(room.active_connections) < 2:
             raise HTTPException(status_code = 400, detail="Not enough players to start the game")
 
