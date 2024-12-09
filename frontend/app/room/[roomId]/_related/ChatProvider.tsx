@@ -24,7 +24,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Message } from './type';
+import { Message, ProcessMessage } from './type';
 
 interface ChatContextType {
   messages: Message[];
@@ -44,6 +44,7 @@ interface ChatContextType {
   handleKill: (userID: string) => void;
   votedId: string | null;
   canKill: boolean;
+  background: ProcessMessage;
 }
 
 export interface User extends UserModel {
@@ -64,6 +65,7 @@ export const ChatContext = createContext<ChatContextType>({
   handleVote: () => {},
   handleKill: () => {},
   canKill: false,
+  background: null,
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
@@ -78,9 +80,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [canKill, setCanKill] = useState(false);
   const [subject, setSubject] = useState<string | null>(null);
   const [isLiar, setIsLiar] = useState<boolean>(false);
-  const [background, setBackground] = useState<
-    'start' | 'dayTime' | 'night' | 'vote' | 'end'
-  >();
+  const [background, setBackground] =
+    useState<ChatContextType['background']>(null);
   const [votedId, setVotedId] = useState<string | null>(null);
   const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
     roomId,
@@ -153,23 +154,43 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           } else if (message.type === PROCESS) {
             setVotedId(null);
             if (message.state === 'start') {
-              setBackground('start');
+              setBackground({
+                state: 'start',
+                time: message.time,
+                type: 'process',
+              });
               setCanSpeak(false);
             }
             if (message.state === 'dayTime') {
-              setBackground('dayTime');
+              setBackground({
+                state: 'dayTime',
+                time: message.time,
+                type: 'process',
+              });
             }
             if (message.state === 'vote') {
-              setBackground('vote');
+              setBackground({
+                state: 'vote',
+                time: message.time,
+                type: 'process',
+              });
               setCanSpeak(false);
               setCanVote(true);
             }
             if (message.state === 'night') {
-              setBackground('night');
+              setBackground({
+                state: 'night',
+                time: message.time,
+                type: 'process',
+              });
               isLiar && setCanKill(true);
             }
             if (message.state === 'end') {
-              setBackground('end');
+              setBackground({
+                state: 'end',
+                time: message.time,
+                type: 'process',
+              });
             }
           }
         } catch (error) {
@@ -286,6 +307,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       canKill,
       handleVote,
       handleKill,
+      background,
     }),
     [
       messages,
@@ -297,6 +319,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       currentUserList,
       handleVote,
       handleKill,
+      background,
     ]
   );
 
