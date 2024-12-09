@@ -21,13 +21,14 @@ export const UserComponent = ({ user }: { user: User }) => {
   } = useContext(ChatContext);
   const { Name, UserID, memo } = user ?? {};
   const isWolf = memo === 'wolf';
+  const isMe = UserID === user.UserID;
   const isUserSelected = votedId === UserID;
 
   return (
     <UserCard>
       <UserImage
         onClick={() => handleChangeUserMemo(user.UserID)}
-        src={isLiar || isWolf ? '/wolf.png' : '/pig.webp'}
+        src={(isLiar && isMe) || isWolf ? '/wolf.png' : '/pig.webp'}
       />
       <AlignCenterRowStack style={{ gap: '4px' }}>
         <UserName>{Name}</UserName>
