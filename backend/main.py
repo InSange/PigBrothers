@@ -62,7 +62,8 @@ class Game:
         # start Game
         await self.room.broadcast(Process(
             type = "process",
-            state = "dayTime"
+            state = "dayTime",
+            time = 3
         ))
 
         # select player for wolf role
@@ -130,7 +131,8 @@ class Game:
 
         await self.room.broadcast(Process(
             type = "process",
-            state = "dayTime"
+            state = "dayTime",
+            time = 30
         ))
 
         # all player chatt start
@@ -147,6 +149,8 @@ class Game:
                 userID = current_player,
                 speak = True
             ))
+
+            await asyncio.sleep(10)
 
             # wait
             await self.room.broadcast(Alert(
@@ -173,7 +177,8 @@ class Game:
         # start vote
         await self.room.broadcast(Process(
             type = "process",
-            state = "vote"
+            state = "vote",
+            time = 30
         ))
 
         self.votes = {player: 0 for player in self.players}
@@ -200,7 +205,8 @@ class Game:
     async def start_wolf_round(self):
         await self.room.broadcast(Process(
             type = "process",
-            state = "night"
+            state = "night",
+            time = 30
         ))
 
         self.wolf_choice = None
@@ -265,7 +271,8 @@ class Game:
 
         await self.room.broadcast(Process(
             type = "process",
-            state = "end"
+            state = "end",
+            time = 0
         ))
 
         if self.winner == "pigs":
@@ -466,7 +473,7 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
             if room_data["RoomHostID"] == user_id:
                 room_data["RoomHostID"] = room_data["UserList"][0]["UserID"]
             room_ref.update({
-                "UserList": [user.dict() for user in room_data["UserList"]],
+                "UserList": [user for user in room_data["UserList"]],
                 "RoomHostID": room_data["RoomHostID"]
             })
 
@@ -527,7 +534,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
 
                 # Firebase ������Ʈ
                 room_ref.update({
-                    "UserList": [user.dict() for user in room_data["UserList"]],
+                    "UserList": [user for user in room_data["UserList"]],
                     "RoomHostID": room_data["RoomHostID"]
                 })
 
@@ -563,7 +570,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
                 user for user in room_data["UserList"] if user["UserID"] != user_id
             ]
 
-            room_ref.update({"UserList": [user.dict() for user in room_data["UserList"]]})
+            room_ref.update({"UserList": [user for user in room_data["UserList"]]})
 
             # if user that out of game is host sett next host
             if room.room_host == user_id and room.active_connections:

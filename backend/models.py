@@ -24,6 +24,7 @@ class Role(BaseMessage):
 
 class Process(BaseMessage):
     state: str
+    time: int
 
 # API 입력 및 반환 모델
 
