@@ -119,7 +119,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
 
       wsRef.current = new WebSocket(
-        `wss://wam-coin.store/ws/room/${roomId}/${userId}`
+        `ws://localhost:8000/ws/room/${roomId}/${userId}`
+        // `wss://wam-coin.store/ws/room/${roomId}/${userId}`
       );
 
       wsRef.current.onopen = () => {
@@ -208,7 +209,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
     try {
       if (wsRef.current) {
-        wsRef.current.send(JSON.stringify({ userID: userId, type: LEAVE }));
+        wsRef.current.send(
+          JSON.stringify({ userID: userId, type: LEAVE, text: '' })
+        );
         wsRef.current.close();
       }
       router.push('/home');
