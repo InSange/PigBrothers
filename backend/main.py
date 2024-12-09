@@ -406,14 +406,14 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
 
         else:
             # 방이 존재하면 참가
-            if len(room_data["UserList"]) >= room_data["MaxUser"]:
+            if any(user["UserID"] == user_id for user in room_data["UserList"]):
+                # 특정 user_id가 존재하는지 확인하고 제거
+                room_data["UserList"] = [user for user in room_data["UserList"] if user["UserID"] != user_id]
+            elif len(room_data["UserList"]) >= room_data["MaxUser"]:
                 print("full {}".format(user_id))
                 await websocket.close(code=4001, reason="Room is full.")
                 return
-            if any(user["UserID"] == user_id for user in room_data["UserList"]):
-                print("already {}".format(user_id))
-                await websocket.close(code=4002, reason="User already in the room.")
-                return
+            
 
             room_data["UserList"].append(user_info.dict())
             room_ref.update({"UserList": room_data["UserList"]})
@@ -539,10 +539,6 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager, room_
 
                 curGame.receive_wolf_choice(message.userID)
                 print("kill palyer")
-            elif message.type == "reconnect":
-                await room.broadcast_to_user(user_id, BaseMessage(
-                    type="reconnect"
-                ))
 
     except WebSocketDisconnect:
         room.disconnect(websocket, user_id)
