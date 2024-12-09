@@ -689,7 +689,7 @@ async def start_game(room_id: str):
         room = room_manager.get_room(room_id)
         if not room:
             raise HTTPException(status_code = 404, detail="Room not found")
-        print("Room Player {}".format(len(room.active_connections)))
+        print("Start ROOM Room Player {}".format(len(room.active_connections)))
         if len(room.active_connections) < 2:
             raise HTTPException(status_code = 400, detail="Not enough players to start the game")
 
