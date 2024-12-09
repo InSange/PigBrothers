@@ -13,7 +13,7 @@ import MyChat from './MyChat';
 import OtherUserChat from './OtherUserChat';
 
 const Chatting = () => {
-  const { messages } = useContext(ChatContext);
+  const { messages, subject } = useContext(ChatContext);
   const { userId: myId } = useContext(GlobalContext);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -28,7 +28,7 @@ const Chatting = () => {
 
   return (
     <ChattingContainer style={{ overflow: 'auto' }}>
-      <ChattingContainerTitle>채팅창</ChattingContainerTitle>
+      <ChattingContainerTitle>채팅창 - {subject}</ChattingContainerTitle>
       <Chats>
         {messages
           ?.filter(
