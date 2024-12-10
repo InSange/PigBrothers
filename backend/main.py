@@ -677,6 +677,11 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
                     "RoomHostID": room_data["RoomHostID"]
                 })
 
+                await room.broadcast(Alert(
+                    type = "alert",
+                    text=f"leave user who {user_id}"
+                ))
+
                 await room.broadcast(RoomInfo(
                     type = "roomInfo",
                     room = room_data
