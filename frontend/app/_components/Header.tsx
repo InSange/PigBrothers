@@ -13,7 +13,7 @@ const PigHeader = ({ onClick }: Props) => {
   const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
     roomId,
   });
-  const { background } = useContext(ChatContext);
+  const { background, gameInfo } = useContext(ChatContext);
   const [timer, setTimer] = useState(0);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const PigHeader = ({ onClick }: Props) => {
 
       return () => clearInterval(interval);
     }
-  }, [background]);
+  }, [background, gameInfo?.current_player]);
 
   return (
     <HeaderStyled>

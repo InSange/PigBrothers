@@ -25,7 +25,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { Message, ProcessMessage } from './type';
+import { GameInfoMessage, Message, ProcessMessage } from './type';
 
 interface ChatContextType {
   messages: Message[];
@@ -47,6 +47,7 @@ interface ChatContextType {
   canKill: boolean;
   background: ProcessMessage;
   roomInfo: RoomModel | null;
+  gameInfo: GameInfoMessage | null;
 }
 
 export interface User extends UserModel {
@@ -69,6 +70,7 @@ export const ChatContext = createContext<ChatContextType>({
   canKill: false,
   background: null,
   roomInfo: null,
+  gameInfo: null,
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
@@ -92,6 +94,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   });
   const [currentUserList, setCurrentUserList] = useState<User[]>([]);
   const [roomInfo, setRoomInfo] = useState<RoomModel | null>(null);
+  const [gameInfo, setGameInfo] = useState<GameInfoMessage | null>(null);
   const isGameStarted = currentRoom?.RoomState;
 
   useEffect(() => {
@@ -322,6 +325,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       handleKill,
       background,
       roomInfo,
+      gameInfo,
     }),
     [
       messages,
@@ -335,6 +339,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       handleKill,
       background,
       roomInfo,
+      gameInfo,
     ]
   );
 
