@@ -2,7 +2,7 @@
 import { AlignCenterRowStack } from '@/app/_components/common';
 import { useContext } from 'react';
 import { ChatContext, User } from '../_related/ChatProvider';
-import { UserCard, UserImage } from '../_related/session.styled';
+import { RoomTitle, UserCard, UserImage } from '../_related/session.styled';
 import { UserComponent } from './UserComponent';
 
 const Users = () => {
@@ -24,6 +24,7 @@ const Users = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+      <RoomTitle>{roomInfo?.Name}</RoomTitle>
       {userRows.map((row, rowIndex) => (
         <AlignCenterRowStack key={rowIndex} style={{ gap: '8px' }}>
           {row.map((user, userIndex) =>
