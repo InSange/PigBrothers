@@ -9,7 +9,6 @@ import { useContext } from 'react';
 import {
   PersonCount,
   PersonCountContainer,
-  RoomLeftContainer,
   RoomListStyled,
   RoomRightContainer,
   RoomTitle,
@@ -32,16 +31,18 @@ const RoomList = ({ room }: { room: RoomModel }) => {
 
   return (
     <RoomListStyled>
-      <RoomLeftContainer>
-        <RoomTitle>{room.Name}</RoomTitle>
-      </RoomLeftContainer>
+      <RoomTitle>{room.Name}</RoomTitle>
       <RoomRightContainer>
         <PersonCountContainer>
           <PersonCount>{room.UserList?.length ?? 0}</PersonCount>
           <PersonCount>/</PersonCount>
           <PersonCount>{room.MaxUser}</PersonCount>
         </PersonCountContainer>
-        <Button size='small' onClick={handleJoinRoom}>
+        <Button
+          style={{ width: 'fit-content' }}
+          size='small'
+          onClick={handleJoinRoom}
+        >
           참가
         </Button>
       </RoomRightContainer>

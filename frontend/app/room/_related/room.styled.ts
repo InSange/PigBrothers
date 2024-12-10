@@ -33,6 +33,7 @@ export const CreateRoomButtonContainer = styled.button`
 export const RoomListStyled = styled.li`
   display: flex;
   flex-direction: row;
+  justify-content: space-between;
   width: 100%;
   padding: 8px 12px;
 
@@ -51,9 +52,13 @@ export const RoomNumber = styled.h6`
 export const RoomTitle = styled.h6`
   color: #000;
   font-size: 14px;
-  flex: 1;
   margin: 0px;
   font-weight: 400;
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: break-all;
 `;
 
 export const RoomListContainer = styled.div`
@@ -63,13 +68,7 @@ export const RoomListContainer = styled.div`
   border-radius: 8px;
 `;
 
-export const RoomLeftContainer = styled(AlignCenterRowStack)`
-  display: flex;
-  flex-direction: row;
-  gap: 8px;
-  flex: 1;
-`;
-export const RoomRightContainer = styled(AlignCenterRowStack)`
+export const RoomRightContainer = styled.div`
   display: flex;
   flex-direction: row;
   gap: 12px;

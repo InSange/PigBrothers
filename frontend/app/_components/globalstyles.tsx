@@ -26,6 +26,7 @@ export default GlobalStyle;
 
 export const ButtonStyled = styled.button<ButtonProps>`
   width: 100%;
+  flex-shrink: 0;
   background-color: ${({ theme, color }) =>
     color === 'primary' ? theme.colors.primary : theme.colors.gray};
   color: #fff;
