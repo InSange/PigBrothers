@@ -9,6 +9,7 @@ import {
   LEAVE,
   PROCESS,
   ROLE,
+  ROOM_INFO,
   STATE,
   VOTE,
 } from '@/constant';
@@ -87,17 +88,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     roomId,
     isConnecting,
   });
-
-  const userList =
-    currentRoom?.UserList?.map((user) => {
-      const isMe = user.UserID === userId;
-
-      return {
-        ...user,
-        memo: isMe && isLiar ? 'wolf' : ('pig' as User['memo']),
-      };
-    }) ?? [];
-  const [currentUserList, setCurrentUserList] = useState<User[]>(userList);
+  const [currentUserList, setCurrentUserList] = useState<User[]>([]);
   const isGameStarted = currentRoom?.RoomState;
 
   useEffect(() => {
@@ -105,9 +96,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     if (!isGameStarted) {
       setCanSpeak(true);
     }
-
-    // 유저 리스트 업데이트
-    setCurrentUserList(userList);
 
     if (!roomId || !userId || isConnecting || wsRef.current) return;
 
@@ -146,6 +134,26 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
           if (message.type === CHAT || message.type === ALERT) {
             setMessages((prev: Message[]) => [...(prev ?? []), message]);
+          } else if (message.type === ROOM_INFO) {
+            const updatedUserList = message?.room?.UserList?.map((newUser) => {
+              // 현재 유저 리스트에 이 유저가 있는지 확인
+              const existingUser = currentUserList.find(
+                (user) => user.UserID === newUser.UserID
+              );
+
+              // 유저가 있으면 그대로 반환
+              if (existingUser) {
+                return existingUser;
+              }
+
+              // 없다면 'pig'의 역할로 추가
+              return {
+                ...newUser,
+                memo: 'pig' as 'pig',
+              };
+            });
+
+            setCurrentUserList(updatedUserList ?? []);
           } else if (message.type === STATE) {
             setCanSpeak(message.speak);
           } else if (message.type === ROLE) {
