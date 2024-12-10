@@ -44,7 +44,6 @@ const PigHeader = ({ onClick }: Props) => {
       )}
       <LogoImage src={'/logo.svg'} alt='logo' width={40} height={40} />
       <HeaderLogoTitle>PIG BROTHERS</HeaderLogoTitle>
-      <HeaderLogoTitle>{' ' + currentRoom?.Name.slice(-4)}</HeaderLogoTitle>
       <div style={{ display: 'flex', flex: 1 }} />
       {roomInfo?.RoomState === true && (
         <HeaderLogoTitle>timer : {timer}</HeaderLogoTitle>

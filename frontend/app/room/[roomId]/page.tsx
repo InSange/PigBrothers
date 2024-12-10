@@ -48,7 +48,7 @@ const Page = () => {
       <PigHeader onClick={handleGotoBack} />
       <SessionContentContainer>
         <Users />
-        {roomInfo?.RoomHostID === userId && (
+        {roomInfo?.RoomHostID === userId && roomInfo?.RoomState === false && (
           <Button onClick={handleStartGame}>게임 시작</Button>
         )}
         <Chatting />
