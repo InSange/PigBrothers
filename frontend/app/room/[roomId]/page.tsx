@@ -44,7 +44,7 @@ const Page = () => {
   };
 
   return (
-    <Layout style={{ height: '100vh' }}>
+    <Layout style={{ height: '100vh', padding: '0px 0px 48px 0px' }}>
       <PigHeader onClick={handleGotoBack} />
       <SessionContentContainer>
         <Users />

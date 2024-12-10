@@ -3,6 +3,7 @@ import styled from 'styled-components';
 
 export const RoomTitle = styled.div`
   font-size: 12px;
+  width: 100%;
   padding: 8px 12px;
   color: #000;
   border-bottom: ${({ theme }) => `1px solid ${theme.colors.primary}`};
