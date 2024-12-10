@@ -48,6 +48,7 @@ export const UserImage = styled.img`
   border-radius: 999999px;
   min-height: 70px;
   cursor: pointer;
+  object-fit: contain;
 `;
 
 export const ChattingContainer = styled.div`
