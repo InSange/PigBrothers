@@ -13,7 +13,7 @@ import {
   STATE,
   VOTE,
 } from '@/constant';
-import { UserModel } from '@/types/Api';
+import { RoomModel, UserModel } from '@/types/Api';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import {
@@ -46,6 +46,7 @@ interface ChatContextType {
   votedId: string | null;
   canKill: boolean;
   background: ProcessMessage;
+  roomInfo: RoomModel | null;
 }
 
 export interface User extends UserModel {
@@ -67,6 +68,7 @@ export const ChatContext = createContext<ChatContextType>({
   handleKill: () => {},
   canKill: false,
   background: null,
+  roomInfo: null,
 });
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
@@ -89,6 +91,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     isConnecting,
   });
   const [currentUserList, setCurrentUserList] = useState<User[]>([]);
+  const [roomInfo, setRoomInfo] = useState<RoomModel | null>(null);
   const isGameStarted = currentRoom?.RoomState;
 
   useEffect(() => {
@@ -135,6 +138,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
           if (message.type === CHAT || message.type === ALERT) {
             setMessages((prev: Message[]) => [...(prev ?? []), message]);
           } else if (message.type === ROOM_INFO) {
+            setRoomInfo(message.room);
             const updatedUserList = message?.room?.UserList?.map((newUser) => {
               // 현재 유저 리스트에 이 유저가 있는지 확인
               const existingUser = currentUserList.find(
@@ -316,6 +320,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       handleVote,
       handleKill,
       background,
+      roomInfo,
     }),
     [
       messages,
@@ -328,6 +333,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       handleVote,
       handleKill,
       background,
+      roomInfo,
     ]
   );
 

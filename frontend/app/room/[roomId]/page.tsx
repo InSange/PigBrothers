@@ -16,7 +16,7 @@ import Users from './_sections/Users';
 const Page = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const { userId } = useContext(GlobalContext);
-  const { handleLeaveRoom } = useContext(ChatContext);
+  const { handleLeaveRoom, roomInfo } = useContext(ChatContext);
   const router = useRouter();
   const { mutateAsync: startGame } = useStartGameFirebaseRoomRoomIdStartPut();
 
@@ -48,7 +48,9 @@ const Page = () => {
       <PigHeader onClick={handleGotoBack} />
       <SessionContentContainer>
         <Users />
-        <Button onClick={handleStartGame}>게임 시작</Button>
+        {roomInfo?.RoomHostID === userId && (
+          <Button onClick={handleStartGame}>게임 시작</Button>
+        )}
         <Chatting />
         <ChattingInput />
       </SessionContentContainer>
