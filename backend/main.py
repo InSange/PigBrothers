@@ -49,9 +49,12 @@ class Game:
         self.dead_players = []
         self.votes= {}
         self.winner = None
+        self.process = None
+        self.wolfSubject = None
+        self.pigSubject = None
 
         self.room = room_manager.get_room(room_id)
-        self.current_turn = 0
+        self.current_player = 0
 
     async def start_game(self):
         self.running = True
@@ -65,15 +68,47 @@ class Game:
             state = "dayTime",
             time = 3
         ))
-
+        self.process = "dayTime"
+        
+        await self.room.broadcast(GameInfo(
+            type="gameInfo",
+            wolf=self.wolf,
+            live_player=self.players,
+            dead_player=self.dead_players,
+            process=self.process,
+            current_player=self.current_player,
+            wolfSubject=self.wolfSubject,
+            pigSubject=self.pigSubject
+        ))
         # select player for wolf role
         await self.choose_wolf()
+
+        await self.room.broadcast(GameInfo(
+            type="gameInfo",
+            wolf=self.wolf,
+            live_player=self.players,
+            dead_player=self.dead_players,
+            process=self.process,
+            current_player=self.current_player,
+            wolfSubject=self.wolfSubject,
+            pigSubject=self.pigSubject
+        ))
 
         # wait 
         await asyncio.sleep(3)
 
         # set thema
         await self.assign_roles()
+        await self.room.broadcast(GameInfo(
+            type="gameInfo",
+            wolf=self.wolf,
+            live_player=self.players,
+            dead_player=self.dead_players,
+            process=self.process,
+            current_player=self.current_player,
+            wolfSubject=self.wolfSubject,
+            pigSubject=self.pigSubject
+        ))
 
         # wait for check thema
         await asyncio.sleep(self.check_timer)
@@ -106,6 +141,9 @@ class Game:
 
     async def assign_roles(self):
         # notify to Players who pigs
+        self.wolfSubject = "animal"
+        self.pigSubject = "pig"
+
         for player in self.players:
             if player == self.wolf:
                 await self.room.broadcast_to_user(player, Role(
@@ -113,7 +151,7 @@ class Game:
                     type = "role",
                     userID = player,
                     role = "wolf",
-                    word = "animal"
+                    word = self.wolfSubject
                 ))
             else: # that pigs
                 await self.room.broadcast_to_user(player, Role(
@@ -121,12 +159,12 @@ class Game:
                     type = "role",
                     userID = player,
                     role = "pig",
-                    word = "pig"
+                    word = self.pigSubject
                 ))
 
     async def start_chat_round(self):
         # random
-        self.current_turn = random.randint(0, len(self.players) - 1) # set index for first
+        current_turn = random.randint(0, len(self.players) - 1) # set index for first
         turn_count = 0 # check turn
 
         await self.room.broadcast(Process(
@@ -134,20 +172,32 @@ class Game:
             state = "dayTime",
             time = 30
         ))
+        self.process = "dayTime"
 
         # all player chatt start
         while self.running and len(self.players) > 1:
-            current_player = self.players[self.current_turn]
+            self.current_player = self.players[current_turn]
             # broad cast who turns
             await self.room.broadcast(Alert(
                 type = "alert",
-                text = f"{current_player} are turn!"
+                text = f"{self.current_player} are turn!"
             ))
 
-            await self.room.broadcast_to_user(current_player, State(
+            await self.room.broadcast_to_user(self.current_player, State(
                 type = "state",
-                userID = current_player,
+                userID = self.current_player,
                 speak = True
+            ))
+
+            await self.room.broadcast(GameInfo(
+                type="gameInfo",
+                wolf=self.wolf,
+                live_player=self.players,
+                dead_player=self.dead_players,
+                process=self.process,
+                current_player=self.current_player,
+                wolfSubject=self.wolfSubject,
+                pigSubject=self.pigSubject
             ))
 
             await asyncio.sleep(10)
@@ -155,19 +205,19 @@ class Game:
             # wait
             await self.room.broadcast(Alert(
                 type = "alert",
-                text = f"{current_player} are turn over"
+                text = f"{self.current_player} are turn over"
             ))
 
-            await self.room.broadcast_to_user(current_player, State(
+            await self.room.broadcast_to_user(self.current_player, State(
                 type = "state",
-                userID = current_player,
+                userID = self.current_player,
                 speak = False
             ))
 
             turn_count += 1
 
             # next player
-            self.current_turn = (self.current_turn + 1) % len(self.players)
+            current_turn = (current_turn + 1) % len(self.players)
 
             # check vote
             if turn_count == len(self.players):
@@ -179,6 +229,19 @@ class Game:
             type = "process",
             state = "vote",
             time = 30
+        ))
+        
+        self.process = "vote"
+
+        await self.room.broadcast(GameInfo(
+            type="gameInfo",
+            wolf=self.wolf,
+            live_player=self.players,
+            dead_player=self.dead_players,
+            process=self.process,
+            current_player=self.current_player,
+            wolfSubject=self.wolfSubject,
+            pigSubject=self.pigSubject
         ))
 
         self.votes = {player: 0 for player in self.players}
@@ -199,14 +262,37 @@ class Game:
         else:
             await self.room.broadcast(Alert(
                 type = "alert",
-                text = "nope"
+                text = "all alive"
             ))
+
+        await self.room.broadcast(GameInfo(
+            type="gameInfo",
+            wolf=self.wolf,
+            live_player=self.players,
+            dead_player=self.dead_players,
+            process=self.process,
+            current_player=self.current_player,
+            wolfSubject=self.wolfSubject,
+            pigSubject=self.pigSubject
+        ))
 
     async def start_wolf_round(self):
         await self.room.broadcast(Process(
             type = "process",
             state = "night",
             time = 30
+        ))
+        self.process = "night"
+
+        await self.room.broadcast(GameInfo(
+            type="gameInfo",
+            wolf=self.wolf,
+            live_player=self.players,
+            dead_player=self.dead_players,
+            process=self.process,
+            current_player=self.current_player,
+            wolfSubject=self.wolfSubject,
+            pigSubject=self.pigSubject
         ))
 
         self.wolf_choice = None
@@ -226,6 +312,17 @@ class Game:
                     type="alert",
                     text = f"{chosen_victim} is dead!"
                 ))
+
+        await self.room.broadcast(GameInfo(
+            type="gameInfo",
+            wolf=self.wolf,
+            live_player=self.players,
+            dead_player=self.dead_players,
+            process=self.process,
+            current_player=self.current_player,
+            wolfSubject=self.wolfSubject,
+            pigSubject=self.pigSubject
+        ))
 
     def wolf_choose_victim(self):
         available_targets = [player for player in self.players if player != self.wolf]
@@ -274,6 +371,18 @@ class Game:
             state = "end",
             time = 0
         ))
+        self.process = "end"
+
+        await self.room.broadcast(GameInfo(
+            type="gameInfo",
+            wolf=self.wolf,
+            live_player=self.players,
+            dead_player=self.dead_players,
+            process=self.process,
+            current_player=self.current_player,
+            wolfSubject=self.wolfSubject,
+            pigSubject=self.pigSubject
+        ))
 
         if self.winner == "pigs":
             # who's the win?
@@ -288,6 +397,7 @@ class Game:
             ))
 
         # 데이터베이스에서 RoomState를 False로 업데이트
+        self.room.in_game = False
         room_ref = firestore_client.collection("Room").document(self.room_id)
         room_ref.update({"RoomState": False})
 
@@ -443,26 +553,42 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
         room = room_manager.get_room(room_id)
         await room.connect(websocket, user_id)
 
-        await room.broadcast_to_user(user_id, RoomInfo(
-            type = "roomInfo",
-            room = room_data
-        ))
-
         print("send room data {room_data}")
         print("Create Room Object {}".format(room_id))
         print(f"Active connections after connect: {len(room.active_connections)}")
 
-        # 방 정보 전송
-        if is_creator:
-            await room.broadcast( Alert(
-                                        type="alert",
-                                        text=f"{user_info.Name} created and joined the room '{room_id}'.",  # 전송할 텍스트 내용
-                                    ))
+        if room.in_game:
+            game_info = game_manager.get_game(room_id)
+            await room.broadcast(GameInfo(
+                type="gameInfo",
+                wolf=game_info.wolf,
+                live_player=game_info.players,
+                dead_player=game_info.dead_players,
+                process=game_info.process,
+                current_player=game_info.current_player,
+                wolfSubject=game_info.wolfSubject,
+                pigSubject=game_info.pigSubject
+            ))
         else:
-            await room.broadcast( Alert(
-                                        type="alert",
-                                        text=f"{user_info.Name} joined the room '{room_id}'.",  # 전송할 텍스트 내용
-                                    ))
+            # 방 정보 전송
+            if is_creator:
+                await room.broadcast( Alert(
+                                            type="alert",
+                                            text=f"{user_info.Name} created and joined the room '{room_id}'.",  # 전송할 텍스트 내용
+                                        ))
+                await room.broadcast(RoomInfo(
+                                            type = "roomInfo",
+                                            room = room_data
+                                        ))
+            else:
+                await room.broadcast( Alert(
+                                            type="alert",
+                                            text=f"{user_info.Name} joined the room '{room_id}'.",  # 전송할 텍스트 내용
+                                        ))
+                await room.broadcast(RoomInfo(
+                                            type = "roomInfo",
+                                            room = room_data
+                                        ))
 
         # 메시지 처리 루프
         await handle_room_while(websocket, room,room_id, user_id)
@@ -551,12 +677,10 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
                     "RoomHostID": room_data["RoomHostID"]
                 })
 
-                await room.broadcast(
-                    Alert(
-                        type="alert",
-                        text=f"change the RoomHost {room_data["RoomHostID"]}",  # 전송할 텍스트 내용
-                    )
-                )
+                await room.broadcast(RoomInfo(
+                    type = "roomInfo",
+                    room = room_data
+                ))
 
                 await websocket.close(code=1000, reason="You have left the room.")
                 return
