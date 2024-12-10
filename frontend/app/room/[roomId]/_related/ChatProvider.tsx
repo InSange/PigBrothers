@@ -5,6 +5,7 @@ import { GlobalContext } from '@/app/GlobalContext';
 import {
   ALERT,
   CHAT,
+  GAME_INFO,
   KILL,
   LEAVE,
   PROCESS,
@@ -161,6 +162,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             });
 
             setCurrentUserList(updatedUserList ?? []);
+          } else if (message.type === GAME_INFO) {
+            setGameInfo(message);
           } else if (message.type === STATE) {
             setCanSpeak(message.speak);
           } else if (message.type === ROLE) {
