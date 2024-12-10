@@ -110,6 +110,11 @@ class Game:
             pigSubject=self.pigSubject
         ))
 
+        await self.room.broadcast(Process(
+            type = "process",
+            state = "dayTime",
+            time = self.check_timer
+        ))
         # wait for check thema
         await asyncio.sleep(self.check_timer)
 
@@ -691,12 +696,12 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
                 return
 
             elif message.type == "vote":
-                curGame = GameManager.get_game(room.room_id)
+                curGame = game_manager.get_game(room.room_id)
 
                 curGame.receive_vote(message.userID, user_id)
                 print("vote player")
             elif message.type == "kill":
-                curGame = GameManager.get_game(room.room_id)
+                curGame = game_manager.get_game(room.room_id)
 
                 curGame.receive_wolf_choice(message.userID)
                 print("kill palyer")
