@@ -433,8 +433,15 @@ class Game:
 
         # 데이터베이스에서 RoomState를 False로 업데이트
         self.room.in_game = False
+        room = room_manager.get_room(self.room_id)
         room_ref = firestore_client.collection("Room").document(self.room_id)
         room_ref.update({"RoomState": False})
+        room_data = room_ref.get().to_dict()
+
+        await room.broadcast(RoomInfo(
+                                    type = "roomInfo",
+                                    room = room_data
+                                ))
 
         await game_manager.end_game(self.room_id)
 
@@ -592,6 +599,11 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
         print("Create Room Object {}".format(room_id))
         print(f"Active connections after connect: {len(room.active_connections)}")
 
+        await room.broadcast(RoomInfo(
+                                    type = "roomInfo",
+                                    room = room_data
+                                ))
+
         if room.in_game:
             game_info = game_manager.get_game(room_id)
             await room.broadcast(GameInfo(
@@ -611,18 +623,10 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
                                             type="alert",
                                             text=f"{user_info.Name} created and joined the room '{room_id}'.",  # 전송할 텍스트 내용
                                         ))
-                await room.broadcast(RoomInfo(
-                                            type = "roomInfo",
-                                            room = room_data
-                                        ))
             else:
                 await room.broadcast( Alert(
                                             type="alert",
                                             text=f"{user_info.Name} joined the room '{room_id}'.",  # 전송할 텍스트 내용
-                                        ))
-                await room.broadcast(RoomInfo(
-                                            type = "roomInfo",
-                                            room = room_data
                                         ))
 
         # 메시지 처리 루프
@@ -881,6 +885,12 @@ async def start_game(room_id: str):
         room.in_game = True
         room_ref = firestore_client.collection("Room").document(room_id)
         room_ref.update({"RoomState": True})
+        room_data = room_ref.get().to_dict()
+
+        await room.broadcast(RoomInfo(
+                                    type = "roomInfo",
+                                    room = room_data
+                                ))
 
         return {"message": f"Game started for Room '{room_id}'"}
 
