@@ -124,12 +124,12 @@ class Game:
 
             await self.start_vote_round()
 
-            if self.check_game_end():
+            if await self.check_game_end():
                 break
 
             await self.start_wolf_round()
 
-            if self.check_game_end():
+            if await self.check_game_end():
                 break
 
         await self.end_game()
@@ -205,7 +205,7 @@ class Game:
                 pigSubject=self.pigSubject
             ))
 
-            await asyncio.sleep(10)
+            await asyncio.sleep(30)
 
             # wait
             await self.room.broadcast(Alert(
@@ -229,6 +229,10 @@ class Game:
                 return
 
     async def start_vote_round(self):
+        await self.room.broadcast(Alert(
+            type = "alert",
+            text = "Lets start Vote Time!!!!"
+        ))
         # start vote
         await self.room.broadcast(Process(
             type = "process",
