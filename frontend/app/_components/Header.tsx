@@ -13,15 +13,16 @@ const PigHeader = ({ onClick }: Props) => {
   const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
     roomId,
   });
-  const { background, gameInfo } = useContext(ChatContext);
+  const { background, gameInfo, roomInfo } = useContext(ChatContext);
   const [timer, setTimer] = useState(0);
 
   useEffect(() => {
+    console.log('background.time', background?.time, gameInfo?.current_player);
     if (background?.time) {
       setTimer(background.time); // Set initial time from background
       const interval = setInterval(() => {
         setTimer((prev) => {
-          if (prev <= 0) {
+          if (prev < 0) {
             clearInterval(interval);
             return 0;
           }
@@ -31,7 +32,7 @@ const PigHeader = ({ onClick }: Props) => {
 
       return () => clearInterval(interval);
     }
-  }, [background, gameInfo?.current_player]);
+  }, [background, gameInfo?.current_player]); // Add gameInfo?.current_player to dependencies
 
   return (
     <HeaderStyled>
@@ -40,7 +41,9 @@ const PigHeader = ({ onClick }: Props) => {
       <HeaderLogoTitle>PIG BROTHERS</HeaderLogoTitle>
       <HeaderLogoTitle>{' ' + currentRoom?.Name.slice(-4)}</HeaderLogoTitle>
       <div style={{ display: 'flex', flex: 1 }} />
-      {timer >= 0 && <HeaderLogoTitle>timer : {timer}</HeaderLogoTitle>}
+      {roomInfo?.RoomState === true && (
+        <HeaderLogoTitle>timer : {timer}</HeaderLogoTitle>
+      )}
     </HeaderStyled>
   );
 };
