@@ -50,10 +50,15 @@ const CreateRoomButton = () => {
             />
             <ModalFooter>
               <ButtonContainer>
-                <Button color='secondary' onClick={handleCloseModal}>
+                <Button
+                  style={{ width: 'fit-content' }}
+                  color='secondary'
+                  onClick={handleCloseModal}
+                >
                   취소
                 </Button>
                 <Button
+                  style={{ width: 'fit-content' }}
                   onClick={() => {
                     router.push(`/room/${generateUUID()}`);
                     handleCloseModal();
