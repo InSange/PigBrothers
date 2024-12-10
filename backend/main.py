@@ -46,8 +46,8 @@ class Game:
         self.wolf = "" # player ID on Wolf
         self.wolf_choice = None
         self.check_timer = 10
-        self.chat_timer = 30
-        self.vote_timer = 30
+        self.chat_timer = 10
+        self.vote_timer = 10
         self.wolf_timer = 10
         self.dead_players = []
         self.votes= {}
@@ -178,7 +178,7 @@ class Game:
         await self.room.broadcast(Process(
             type = "process",
             state = "dayTime",
-            time = 30
+            time = 10
         ))
         self.process = "dayTime"
 
@@ -217,7 +217,7 @@ class Game:
                 pigSubject=self.pigSubject
             ))
 
-            await asyncio.sleep(30)
+            await asyncio.sleep(10)
 
             # wait
             await self.room.broadcast(Alert(
@@ -249,7 +249,7 @@ class Game:
         await self.room.broadcast(Process(
             type = "process",
             state = "vote",
-            time = 30
+            time = self.vote_timer
         ))
         
         self.process = "vote"
