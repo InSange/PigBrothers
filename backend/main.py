@@ -443,6 +443,12 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
         room = room_manager.get_room(room_id)
         await room.connect(websocket, user_id)
 
+        await room.broadcast_to_user(user_id, RoomInfo(
+            type = "roomInfo",
+            room = room_data
+        ))
+
+        print("send room data {room_data}")
         print("Create Room Object {}".format(room_id))
         print(f"Active connections after connect: {len(room.active_connections)}")
 
@@ -450,12 +456,12 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
         if is_creator:
             await room.broadcast( Alert(
                                         type="alert",
-                                        text=f"{user_id} created and joined the room '{room_id}'.",  # 전송할 텍스트 내용
+                                        text=f"{user_info.Name} created and joined the room '{room_id}'.",  # 전송할 텍스트 내용
                                     ))
         else:
             await room.broadcast( Alert(
                                         type="alert",
-                                        text=f"{user_id} joined the room '{room_id}'.",  # 전송할 텍스트 내용
+                                        text=f"{user_info.Name} joined the room '{room_id}'.",  # 전송할 텍스트 내용
                                     ))
 
         # 메시지 처리 루프
