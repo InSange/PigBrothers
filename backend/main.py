@@ -542,6 +542,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
                 )
 
                 await websocket.close(code=1000, reason="You have left the room.")
+                return
 
             elif message.type == "vote":
                 curGame = GameManager.get_game(room.room_id)
