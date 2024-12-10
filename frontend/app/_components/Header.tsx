@@ -4,6 +4,7 @@ import { HeaderStyled, LogoImage } from '../(root)/_related/root.styled';
 import { useGetRoomStatusFirebaseRoomRoomIdGet } from '../api/room/hooks/useQueryRoom';
 import { HeaderLogoTitle } from '../home/_related/home.styled';
 import { ChatContext } from '../room/[roomId]/_related/ChatProvider';
+import Button from './Button';
 
 type Props = {
   onClick?: () => void;
@@ -36,7 +37,11 @@ const PigHeader = ({ onClick }: Props) => {
 
   return (
     <HeaderStyled>
-      {onClick && <button onClick={onClick}>나가기 버튼</button>}
+      {onClick && (
+        <Button style={{ width: 'fit-content' }} onClick={onClick}>
+          {'<'}
+        </Button>
+      )}
       <LogoImage src={'/logo.svg'} alt='logo' width={40} height={40} />
       <HeaderLogoTitle>PIG BROTHERS</HeaderLogoTitle>
       <HeaderLogoTitle>{' ' + currentRoom?.Name.slice(-4)}</HeaderLogoTitle>
