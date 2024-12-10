@@ -141,7 +141,7 @@ class Game:
         # notify to player who roles wolf
         await self.room.broadcast_to_user(self.wolf, Alert(
             type = "alert",
-            text = f"{self.wolf} you are wolf!",  # 전송할 텍스트 내용
+            text = "you are wolf!",  # 전송할 텍스트 내용
         ))
 
     async def assign_roles(self):
@@ -182,10 +182,19 @@ class Game:
         # all player chatt start
         while self.running and len(self.players) > 1:
             self.current_player = self.players[current_turn]
+
+            room_ref = firestore_client.collection("Room").document(self.room_id)
+            room_data = room_ref.get().to_dict()
+
+            user_name = next(
+                (user["Name"] for user in room_data["UserList"] if user["UserID"] == self.current_player),
+                None  # 기본값: 매칭된 데이터가 없을 경우 None 반환
+            )
+
             # broad cast who turns
             await self.room.broadcast(Alert(
                 type = "alert",
-                text = f"{self.current_player} are turn!"
+                text = f"{user_name} are turn!"
             ))
 
             await self.room.broadcast_to_user(self.current_player, State(
@@ -210,7 +219,7 @@ class Game:
             # wait
             await self.room.broadcast(Alert(
                 type = "alert",
-                text = f"{self.current_player} are turn over"
+                text = f"{user_name} are turn over"
             ))
 
             await self.room.broadcast_to_user(self.current_player, State(
@@ -261,11 +270,19 @@ class Game:
         # result after vote
         most_voted_player = self.calculate_votes()
 
+        room_ref = firestore_client.collection("Room").document(self.room_id)
+        room_data = room_ref.get().to_dict()
+
+        user_name = next(
+            (user["Name"] for user in room_data["UserList"] if user["UserID"] == most_voted_player),
+            None  # 기본값: 매칭된 데이터가 없을 경우 None 반환
+        )
+
         # check kill to many vote player
         if most_voted_player:
             await self.room.broadcast(Alert(
                 type = "alert",
-                text = f"{most_voted_player} is most voted player!"
+                text = f"{user_name} is most voted player!"
             ))
             await self.kill_player(most_voted_player)
         else:
@@ -315,11 +332,20 @@ class Game:
 
             # select player who eliminate pig
             chosen_victim = self.wolf_choice if self.wolf_choice else self.wolf_choose_victim()
+
+            room_ref = firestore_client.collection("Room").document(self.room_id)
+            room_data = room_ref.get().to_dict()
+
+            user_name = next(
+                (user["Name"] for user in room_data["UserList"] if user["UserID"] == chosen_victim),
+                None  # 기본값: 매칭된 데이터가 없을 경우 None 반환
+            )
+
             if chosen_victim:
                 await self.kill_player(chosen_victim)
                 await self.room.broadcast(Alert(
                     type="alert",
-                    text = f"{chosen_victim} is dead!"
+                    text = f"{user_name} is dead!"
                 ))
 
         await self.room.broadcast(GameInfo(
@@ -410,7 +436,7 @@ class Game:
         room_ref = firestore_client.collection("Room").document(self.room_id)
         room_ref.update({"RoomState": False})
 
-        game_manager.end_game(self.room_id)
+        await game_manager.end_game(self.room_id)
 
 class GameManager:
     def __init__(self) -> None:
@@ -425,9 +451,9 @@ class GameManager:
         asyncio.create_task(game.start_game())
         return game
     
-    def end_game(self, room_id: str):
+    async def end_game(self, room_id: str):
         if room_id in self.games:
-            self.games[room_id].end_game()
+            await self.games[room_id].end_game()
             del self.games[room_id]
 
     def get_game(self, room_id: str) -> Game:
@@ -623,11 +649,14 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str):
                 "UserList": [user for user in room_data["UserList"]],
                 "RoomHostID": room_data["RoomHostID"]
             })
-
+            user_name = next(
+                (user["Name"] for user in room_data["UserList"] if user["UserID"] == user_id),
+                None  # 기본값: 매칭된 데이터가 없을 경우 None 반환
+            )
             await room.broadcast(
                 Alert(
                     type="alert",
-                    text=f"change the RoomHost {room_data["RoomHostID"]}",  # 전송할 텍스트 내용
+                    text=f"change the RoomHost {user_name}",  # 전송할 텍스트 내용
                 )
             )
 
@@ -686,9 +715,14 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
                     "RoomHostID": room_data["RoomHostID"]
                 })
 
+                user_name = next(
+                    (user["Name"] for user in room_data["UserList"] if user["UserID"] == user_id),
+                    None  # 기본값: 매칭된 데이터가 없을 경우 None 반환
+                )
+
                 await room.broadcast(Alert(
                     type = "alert",
-                    text=f"leave user who {user_id}"
+                    text=f"leave user who {user_name}"
                 ))
 
                 await room.broadcast(RoomInfo(
