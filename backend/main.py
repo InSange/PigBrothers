@@ -40,7 +40,7 @@ class Game:
         self.room_id = room_id
         self.running = False
         self.players = [] # players in game
-        self.wolf = None # player ID on Wolf
+        self.wolf = "" # player ID on Wolf
         self.wolf_choice = None
         self.check_timer = 10
         self.chat_timer = 30
@@ -49,12 +49,12 @@ class Game:
         self.dead_players = []
         self.votes= {}
         self.winner = None
-        self.process = None
-        self.wolfSubject = None
-        self.pigSubject = None
+        self.process = ""
+        self.wolfSubject = ""
+        self.pigSubject = ""
 
         self.room = room_manager.get_room(room_id)
-        self.current_player = 0
+        self.current_player = ""
 
     async def start_game(self):
         self.running = True
