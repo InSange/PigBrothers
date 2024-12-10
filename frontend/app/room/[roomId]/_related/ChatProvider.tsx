@@ -179,6 +179,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
                 time: message.time,
                 type: 'process',
               });
+              setCanSpeak(false);
             }
             if (message.state === 'vote') {
               setBackground({
@@ -260,7 +261,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const handleVote = (userID: string) => {
     setVotedId(userID);
     if (wsRef.current) {
-      wsRef.current.send(JSON.stringify({ userID, type: VOTE }));
+      wsRef.current.send(JSON.stringify({ userID, type: VOTE, text: '' }));
     }
     setCanVote(false);
   };
@@ -268,7 +269,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const handleKill = (userID: string) => {
     setVotedId(userID);
     if (wsRef.current) {
-      wsRef.current.send(JSON.stringify({ userID, type: KILL }));
+      wsRef.current.send(JSON.stringify({ userID, type: KILL, text: '' }));
     }
     setCanKill(false);
   };
