@@ -361,8 +361,19 @@ class ConnectionManager:
 # 각 방에 맞는 ConnectionManager 관리
 
 class RoomManager:
+    _instance = None
+
+    @staticmethod
+    def get_instance():
+        if RoomManager._instance is None:
+            RoomManager()
+        return RoomManager._instance
+
     def __init__(self):
-        self.rooms: Dict[str, ConnectionManager] = {} 
+        if RoomManager._instance is not None:
+            raise Exception("This class is a singleton!")  
+        self.rooms: Dict[str, ConnectionManager] = {}
+        RoomManager._instance = self
 
     def get_room(self, room_id: str) -> ConnectionManager:
         if room_id not in self.rooms:
