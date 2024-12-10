@@ -18,7 +18,6 @@ const PigHeader = ({ onClick }: Props) => {
   const [timer, setTimer] = useState(0);
 
   useEffect(() => {
-    console.log('background.time', background?.time, gameInfo?.current_player);
     if (background?.time) {
       setTimer(background.time); // Set initial time from background
       const interval = setInterval(() => {

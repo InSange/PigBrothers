@@ -20,5 +20,6 @@ export function useGetRoomStatusFirebaseRoomRoomIdGet({
   return useQuery({
     queryKey: [QUERY_KEY.GET_ROOM_STATUS, roomId, isConnecting],
     queryFn: () => getRoomStatusFirebaseRoomRoomIdGet({ roomId }),
+    enabled: !!roomId,
   });
 }

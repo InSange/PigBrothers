@@ -1,5 +1,5 @@
 'use client';
-import { createContext, PropsWithChildren, useMemo } from 'react';
+import { createContext, PropsWithChildren, useMemo, useState } from 'react';
 
 type ContextType = {
   userId?: string;
@@ -14,25 +14,28 @@ export const GlobalContext = createContext<ContextType>({
 export const GlobalContextProvider = ({ children }: PropsWithChildren) => {
   // localStorage에서 초기값 가져오기
   const getUserFromLocalStorage = (): ContextType['userId'] | undefined => {
-    if (typeof window === 'undefined') return undefined; // 서버 렌더링 방지
+    if (typeof window === 'undefined') return ''; // 서버 렌더링 방지
     try {
       const savedUser = localStorage.getItem(window.location.hostname + 'user');
-      return savedUser ? savedUser : undefined;
+      return savedUser ? savedUser : '';
     } catch (error) {
       console.error('Failed to parse user from localStorage:', error);
       return undefined;
     }
   };
 
-  const userId = getUserFromLocalStorage();
+  const [userId, setUserId] = useState<ContextType['userId']>(() => {
+    return getUserFromLocalStorage();
+  });
 
-  // 사용자가 변경될 때 localStorage에 저장
   const handleChangeUser = (newUser: ContextType['userId']) => {
     localStorage.setItem(window.location.hostname + 'user', newUser!);
+    setUserId(newUser);
   };
 
   const handleLogout = () => {
     localStorage.removeItem(window.location.hostname + 'user');
+    setUserId(undefined);
   };
 
   const contextValue = useMemo(

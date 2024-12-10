@@ -21,11 +21,12 @@ const Page = () => {
   const { mutateAsync: startGame } = useStartGameFirebaseRoomRoomIdStartPut();
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (!userId) {
       enqueueSnackbar({ variant: 'error', message: '유저 정보가 없습니다.' });
       return router.push('/home');
     }
-  }, []);
+  }, [userId]);
 
   if (!roomId) return;
 
