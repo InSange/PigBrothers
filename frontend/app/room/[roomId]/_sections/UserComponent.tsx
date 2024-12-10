@@ -35,7 +35,7 @@ export const UserComponent = ({ user }: { user: User }) => {
       />
       <AlignCenterRowStack style={{ gap: '4px' }}>
         <UserName>
-          {roomInfo?.RoomHostID === myId && isMe ? `👑 ${Name}` : Name}
+          {roomInfo?.RoomHostID === user.UserID ? `👑 ${Name}` : Name}
         </UserName>
         {/* 투표 할 수 있음 */}
         {canVote && (
