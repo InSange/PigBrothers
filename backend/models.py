@@ -55,3 +55,13 @@ class Process(BaseMessage):
 
 class RoomInfo(BaseMessage):
     room: dict
+
+class GameInfo(BaseMessage):
+    # type: "gameInfo"
+    wolf: str = None
+    live_player: List[str] = {}
+    dead_player: List[str] = {}
+    process: str = None
+    current_player: str = None
+    wolfSubject: str = None
+    pigSubject: str = None
