@@ -1,5 +1,6 @@
 import asyncio
 import random
+import sys
 import json
 from collections import defaultdict
 from datetime import datetime
@@ -23,6 +24,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+sys.setrecursionlimit(2000)
 
 # WebSocket Check
 
@@ -306,9 +309,13 @@ class Game:
         await self.room.broadcast(Process(
             type = "process",
             state = "night",
-            time = 30
+            time = self.wolf_timer
         ))
         self.process = "night"
+        await self.room.broadcast(Alert(
+                type="alert",
+                text = "To Night...."
+            ))
 
         await self.room.broadcast(GameInfo(
             type="gameInfo",
@@ -369,7 +376,8 @@ class Game:
 
     def receive_vote(self, voter_id: str, voted_player: str):
         if voted_player in self.votes:
-            self.votes[voted_player] += 1
+            self.votes[voter_id] += 1
+        print("cur Vote List {self.votes}")
     
     async def kill_player(self, player):
         self.players.remove(player)
@@ -392,9 +400,11 @@ class Game:
         num_alive = len(self.players)
         if self.wolf not in self.players:
             self.winner = "pigs"
+            self.running = False
             return True
         elif num_alive == 2 and self.wolf in self.players:
             self.winner = "wolf"
+            self.running = False 
             return True
         return False
 
@@ -741,7 +751,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
                 curGame = game_manager.get_game(room.room_id)
 
                 curGame.receive_vote(message.userID, user_id)
-                print("vote player")
+                print("vote player {user_id} => {message.userID}")
             elif message.type == "kill":
                 curGame = game_manager.get_game(room.room_id)
 
