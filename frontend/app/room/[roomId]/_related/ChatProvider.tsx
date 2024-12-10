@@ -120,8 +120,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
 
       wsRef.current = new WebSocket(
-        `ws://localhost:8000/ws/room/${roomId}/${userId}`
-        // `wss://wam-coin.store/ws/room/${roomId}/${userId}`
+        // `ws://localhost:8000/ws/room/${roomId}/${userId}`
+        `wss://wam-coin.store/ws/room/${roomId}/${userId}`
       );
 
       wsRef.current.onopen = () => {
