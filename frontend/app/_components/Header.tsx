@@ -18,12 +18,18 @@ const PigHeader = ({ onClick }: Props) => {
 
   useEffect(() => {
     if (background?.time) {
-      setTimer(0); // Reset timer
+      setTimer(background.time); // Set initial time from background
       const interval = setInterval(() => {
-        setTimer((prev) => prev + 1);
+        setTimer((prev) => {
+          if (prev <= 0) {
+            clearInterval(interval);
+            return 0;
+          }
+          return prev - 1;
+        });
       }, 1000);
 
-      return () => clearInterval(interval); // Cleanup on unmount or background change
+      return () => clearInterval(interval);
     }
   }, [background]);
 
@@ -33,7 +39,8 @@ const PigHeader = ({ onClick }: Props) => {
       <LogoImage src={'/logo.svg'} alt='logo' width={40} height={40} />
       <HeaderLogoTitle>PIG BROTHERS</HeaderLogoTitle>
       <HeaderLogoTitle>{' ' + currentRoom?.Name.slice(-4)}</HeaderLogoTitle>
-      <div>Timer: {timer} seconds</div>
+      <div style={{ display: 'flex', flex: 1 }} />
+      {timer >= 0 && <HeaderLogoTitle>timer : {timer}</HeaderLogoTitle>}
     </HeaderStyled>
   );
 };
