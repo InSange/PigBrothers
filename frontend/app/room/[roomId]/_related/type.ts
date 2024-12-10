@@ -1,3 +1,5 @@
+import { RoomModel } from '@/types/Api';
+
 export type ProcessType = 'start' | 'dayTime' | 'vote' | 'night' | 'end' | null;
 
 // 서버 -> 클라이언트
@@ -6,6 +8,10 @@ export type Message =
       type: 'state';
       userID: string;
       speak: boolean;
+    }
+  | {
+      type: 'roomInfo';
+      room: RoomModel;
     }
   | {
       type: 'role';

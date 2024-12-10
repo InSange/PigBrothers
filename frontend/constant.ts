@@ -6,6 +6,7 @@ export const QUERY_KEY = {
 };
 
 export const STATE = 'state';
+export const ROOM_INFO = 'roomInfo';
 export const ROLE = 'role';
 export const PROCESS = 'process';
 export const CHAT = 'chat';
