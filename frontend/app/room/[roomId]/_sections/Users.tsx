@@ -23,7 +23,14 @@ const Users = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div
+      style={{
+        width: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+      }}
+    >
       <RoomTitle>{roomInfo?.Name}</RoomTitle>
       {userRows.map((row, rowIndex) => (
         <AlignCenterRowStack key={rowIndex} style={{ gap: '8px' }}>

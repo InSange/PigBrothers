@@ -1,14 +1,17 @@
 import { ContentContainer } from '@/app/_components/globalstyles';
 import styled from 'styled-components';
 
-export const RoomTitle = styled.div`
+export const RoomTitle = styled.span`
   font-size: 12px;
   width: 100%;
   padding: 8px 12px;
   color: #000;
   border-bottom: ${({ theme }) => `1px solid ${theme.colors.primary}`};
-  width: fit-content;
   font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: break-all;
 `;
 
 export const SessionContentContainer = styled(ContentContainer)`
@@ -24,14 +27,18 @@ export const UserCard = styled.div`
   align-items: center;
   display: flex;
   flex-direction: column;
-  height: 10vh;
+  height: 8vh;
   gap: 8px;
   min-height: 80px;
 `;
 
 export const UserName = styled.div`
-  font-size: 16px;
+  font-size: 12px;
   color: #000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  word-break: break-all;
 `;
 
 export const VoteImage = styled.img`
@@ -56,8 +63,9 @@ export const ChattingContainer = styled.div`
   background-color: #fff0f0;
   display: flex;
   flex-direction: column;
+  width: 100%;
   gap: 12px;
-  flex: 1;
+  height: 100%;
 `;
 
 export const ChattingContainerTitle = styled.div`
@@ -68,8 +76,10 @@ export const Chats = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex: 1;
+  height: 100%;
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
   padding: 8px;
 `;
 
@@ -88,6 +98,7 @@ export const HostChatBubble = styled.div`
   width: 100%;
   min-height: 24px;
   text-align: center;
+  word-break: break-all;
 `;
 export const MyChatBubble = styled(ChatBubble)`
   margin-left: auto;
@@ -110,4 +121,5 @@ export const ChatImage = styled.img`
 export const ChatContent = styled.div`
   font-size: 14px;
   color: #000;
+  word-break: break-all;
 `;
