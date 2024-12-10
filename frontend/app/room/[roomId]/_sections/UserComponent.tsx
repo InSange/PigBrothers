@@ -1,5 +1,6 @@
 'use client';
 import { AlignCenterRowStack } from '@/app/_components/common';
+import { GlobalContext } from '@/app/GlobalContext';
 import { useContext } from 'react';
 import { ChatContext, User } from '../_related/ChatProvider';
 import {
@@ -18,10 +19,12 @@ export const UserComponent = ({ user }: { user: User }) => {
     canKill,
     handleVote,
     handleKill,
+    roomInfo,
   } = useContext(ChatContext);
+  const { userId: myId } = useContext(GlobalContext);
   const { Name, UserID, memo } = user ?? {};
   const isWolf = memo === 'wolf';
-  const isMe = UserID === user.UserID;
+  const isMe = UserID === myId;
   const isUserSelected = votedId === UserID;
 
   return (
@@ -31,7 +34,9 @@ export const UserComponent = ({ user }: { user: User }) => {
         src={(isLiar && isMe) || isWolf ? '/wolf.png' : '/pig.webp'}
       />
       <AlignCenterRowStack style={{ gap: '4px' }}>
-        <UserName>{Name}</UserName>
+        <UserName>
+          {roomInfo?.RoomHostID === myId && isMe ? `👑 ${Name}` : Name}
+        </UserName>
         {/* 투표 할 수 있음 */}
         {canVote && (
           <VoteImage onClick={() => handleVote(UserID)} src='/Box.svg' />
