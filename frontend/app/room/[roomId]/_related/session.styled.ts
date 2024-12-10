@@ -1,6 +1,15 @@
 import { ContentContainer } from '@/app/_components/globalstyles';
 import styled from 'styled-components';
 
+export const RoomTitle = styled.div`
+  font-size: 12px;
+  padding: 8px 12px;
+  color: #000;
+  border-bottom: ${({ theme }) => `1px solid ${theme.colors.primary}`};
+  width: fit-content;
+  font-weight: bold;
+`;
+
 export const SessionContentContainer = styled(ContentContainer)`
   padding: 12px 20px;
   display: flex;

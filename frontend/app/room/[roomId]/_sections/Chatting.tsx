@@ -28,7 +28,9 @@ const Chatting = () => {
 
   return (
     <ChattingContainer style={{ overflow: 'auto' }}>
-      <ChattingContainerTitle>채팅창 - {subject}</ChattingContainerTitle>
+      <ChattingContainerTitle>
+        채팅창 {subject ? `- ${subject}` : ''}
+      </ChattingContainerTitle>
       <Chats>
         {messages
           ?.filter(

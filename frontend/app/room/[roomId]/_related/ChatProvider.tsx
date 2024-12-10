@@ -98,6 +98,22 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [gameInfo, setGameInfo] = useState<GameInfoMessage | null>(null);
   const isGameStarted = currentRoom?.RoomState;
 
+  const handleClearGame = () => {
+    setCanSpeak(true);
+    setMessages([]);
+    setVotedId(null);
+    setCanVote(false);
+    setCanKill(false);
+    setBackground(null);
+    setIsLiar(false);
+    setSubject(null);
+    setGameInfo(null);
+    setRoomInfo(null);
+    setCurrentUserList((prevUser) =>
+      prevUser?.map((user) => ({ ...user, memo: 'pig' }))
+    );
+  };
+
   useEffect(() => {
     // 게임이 시작 되지 않은 상태(대기실)면, 말할 수 있음
     if (!isGameStarted) {
@@ -205,11 +221,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
               isLiar && setCanKill(true);
             }
             if (message.state === 'end') {
-              setBackground({
-                state: 'end',
-                time: message.time,
-                type: 'process',
-              });
+              handleClearGame();
             }
           }
         } catch (error) {
