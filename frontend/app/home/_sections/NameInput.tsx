@@ -30,16 +30,16 @@ const NameInput = () => {
   };
 
   return (
-    <>
+    <div style={{ width: '70%' }}>
       <input
         type='text'
-        style={{ width: '100%' }}
+        style={{ width: '100%', marginBottom: '16px' }}
         value={name ?? ''}
         placeholder='이름을 입력해주세요.'
         onChange={(e) => setName(e.target.value)}
       />
-      <Button onClick={handleAddUser}>게임하러 가기</Button>
-    </>
+      <Button onClick={handleAddUser}>채팅하러 가기</Button>
+    </div>
   );
 };
 

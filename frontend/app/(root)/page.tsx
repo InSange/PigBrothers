@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { Layout, LogoImage, LogoTitle } from './_related/root.styled';
 import { useEffect } from 'react';
+import { Layout, LogoImage, LogoTitle } from './_related/root.styled';
 
 export default function Home() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function Home() {
       }}
     >
       <LogoImage src={'/logo.svg'} alt='logo' width={300} height={300} />
-      <LogoTitle>PIG BROTHERS에 접속 중 . . </LogoTitle>
+      <LogoTitle>PIG CHATS에 접속 중 . . </LogoTitle>
     </Layout>
   );
 }

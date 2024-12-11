@@ -13,7 +13,7 @@ import MyChat from './MyChat';
 import OtherUserChat from './OtherUserChat';
 
 const Chatting = () => {
-  const { messages, subject } = useContext(ChatContext);
+  const { messages } = useContext(ChatContext);
   const { userId: myId } = useContext(GlobalContext);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -22,15 +22,9 @@ const Chatting = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  if (!messages) {
-    throw new Error('ChatMessageList must be used within a ChatProvider');
-  }
-
   return (
     <ChattingContainer style={{ overflow: 'auto' }}>
-      <ChattingContainerTitle>
-        채팅창 {subject ? `- ${subject}` : ''}
-      </ChattingContainerTitle>
+      <ChattingContainerTitle>채팅창</ChattingContainerTitle>
       <Chats>
         {messages
           ?.filter(
