@@ -5,7 +5,7 @@ import { Layout } from '../(root)/_related/root.styled';
 import PigHeader from '../_components/Header';
 import { GlobalContext } from '../GlobalContext';
 import { HomeContentContainer } from './_related/home.styled';
-import Carousel from './_sections/\bCarousel';
+import Carousel from './_sections/Carousel';
 import NameInput from './_sections/NameInput';
 
 const page = () => {
