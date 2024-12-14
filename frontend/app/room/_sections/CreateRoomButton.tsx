@@ -12,21 +12,26 @@ import {
   XIcon,
 } from '@/app/_components/common';
 import Textfield from '@/app/_components/TextField';
+import { GlobalContext } from '@/app/GlobalContext';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { CreateRoomButtonContainer } from '../_related/room.styled';
 
 const CreateRoomButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [roomName, setRoomName] = useState('');
   const router = useRouter();
+  const { handleChangeRoomName } = useContext(GlobalContext);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
+    setRoomName('');
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setRoomName('');
+    handleChangeRoomName(roomName);
   };
 
   return (
@@ -60,8 +65,10 @@ const CreateRoomButton = () => {
                 <Button
                   style={{ width: 'fit-content' }}
                   onClick={() => {
-                    router.push(`/room/${generateUUID()}`);
                     handleCloseModal();
+                    setTimeout(() => {
+                      router.push(`/room/${generateUUID()}`);
+                    }, 300);
                   }}
                 >
                   확인

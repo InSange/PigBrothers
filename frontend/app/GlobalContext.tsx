@@ -5,10 +5,13 @@ type ContextType = {
   userId?: string;
   handleChangeUser: (name: ContextType['userId']) => void;
   handleLogout: () => void;
+  roomName?: string;
+  handleChangeRoomName: (name: ContextType['roomName']) => void;
 };
 export const GlobalContext = createContext<ContextType>({
   handleChangeUser: (_: ContextType['userId']) => {},
   handleLogout: () => {},
+  handleChangeRoomName: (_: ContextType['roomName']) => {},
 });
 
 export const GlobalContextProvider = ({ children }: PropsWithChildren) => {
@@ -27,6 +30,7 @@ export const GlobalContextProvider = ({ children }: PropsWithChildren) => {
   const [userId, setUserId] = useState<ContextType['userId']>(() => {
     return getUserFromLocalStorage();
   });
+  const [roomName, setRoomName] = useState<ContextType['roomName']>();
 
   const handleChangeUser = (newUser: ContextType['userId']) => {
     localStorage.setItem(window.location.hostname + 'user', newUser!);
@@ -38,9 +42,19 @@ export const GlobalContextProvider = ({ children }: PropsWithChildren) => {
     setUserId(undefined);
   };
 
+  const handleChangeRoomName = (newRoomName: ContextType['roomName']) => {
+    setRoomName(newRoomName);
+  };
+
   const contextValue = useMemo(
-    () => ({ userId, handleChangeUser, handleLogout }),
-    [userId]
+    () => ({
+      userId,
+      handleChangeUser,
+      handleLogout,
+      roomName,
+      handleChangeRoomName,
+    }),
+    [userId, roomName]
   );
 
   return (
