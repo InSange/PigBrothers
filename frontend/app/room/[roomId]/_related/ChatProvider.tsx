@@ -38,8 +38,6 @@ interface ChatContextType {
   canSpeak: boolean;
   canVote: boolean;
   isLiar: boolean;
-  currentUserList: User[];
-  handleChangeUserMemo: (userID: string) => void;
   handleVote: (userID: string) => void;
   handleKill: (userID: string) => void;
   votedId: string | null;
@@ -60,8 +58,6 @@ export const ChatContext = createContext<ChatContextType>({
   canSpeak: false,
   canVote: false,
   isLiar: false,
-  currentUserList: [],
-  handleChangeUserMemo: () => {},
   votedId: null,
   handleVote: () => {},
   handleKill: () => {},
@@ -85,7 +81,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [background, setBackground] =
     useState<ChatContextType['background']>(null);
   const [votedId, setVotedId] = useState<string | null>(null);
-  const [currentUserList, setCurrentUserList] = useState<User[]>([]);
   const [roomInfo, setRoomInfo] = useState<RoomModel | null>(null);
   const [gameInfo, setGameInfo] = useState<GameInfoMessage | null>(null);
 
@@ -99,9 +94,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setIsLiar(false);
     setGameInfo(null);
     setRoomInfo(null);
-    setCurrentUserList((prevUser) =>
-      prevUser?.map((user) => ({ ...user, memo: 'pig' }))
-    );
   };
 
   useEffect(() => {
@@ -153,25 +145,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             setMessages((prev: Message[]) => [...(prev ?? []), message]);
           } else if (message.type === ROOM_INFO) {
             setRoomInfo(message.room);
-            const updatedUserList = message?.room?.UserList?.map((newUser) => {
-              // 현재 유저 리스트에 이 유저가 있는지 확인
-              const existingUser = currentUserList.find(
-                (user) => user.UserID === newUser.UserID
-              );
-
-              // 유저가 있으면 그대로 반환
-              if (existingUser) {
-                return existingUser;
-              }
-
-              // 없다면 'pig'의 역할로 추가
-              return {
-                ...newUser,
-                memo: 'pig' as 'pig',
-              };
-            });
-
-            setCurrentUserList(updatedUserList ?? []);
           } else if (message.type === GAME_INFO) {
             setGameInfo(message);
           } else if (message.type === STATE) {
@@ -233,18 +206,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       setIsConnecting(false);
     };
   }, [roomId, userId, isConnecting]);
-
-  const handleChangeUserMemo: ChatContextType['handleChangeUserMemo'] = (
-    userID
-  ) => {
-    setCurrentUserList((prev) =>
-      prev.map((user) =>
-        user.UserID === userID
-          ? { ...user, memo: user.memo === 'pig' ? 'wolf' : 'pig' }
-          : user
-      )
-    );
-  };
 
   const handleLeaveRoom = async () => {
     if (!userId) {
@@ -321,11 +282,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       messages,
       sendMessage,
       handleLeaveRoom,
-      handleChangeUserMemo,
       canSpeak,
       canVote,
       isLiar,
-      currentUserList,
       votedId,
       canKill,
       handleVote,
@@ -340,7 +299,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       canVote,
       canKill,
       isLiar,
-      currentUserList,
       handleVote,
       handleKill,
       background,

@@ -6,9 +6,10 @@ import { RoomTitle, UserCard, UserImage } from '../_related/session.styled';
 import { UserComponent } from './UserComponent';
 
 const Users = () => {
-  const { currentUserList, roomInfo } = useContext(ChatContext);
+  const { roomInfo } = useContext(ChatContext);
   const MAX_USERS = 8;
   const USERS_PER_ROW = 4;
+  const currentUserList = roomInfo?.UserList ?? [];
 
   const remainingSlots = MAX_USERS - currentUserList.length;
   const allSlots: User[] = [
