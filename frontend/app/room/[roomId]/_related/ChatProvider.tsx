@@ -37,7 +37,6 @@ interface ChatContextType {
   handleLeaveRoom: () => Promise<void>;
   canSpeak: boolean;
   canVote: boolean;
-  subject: string | null;
   isLiar: boolean;
   currentUserList: User[];
   handleChangeUserMemo: (userID: string) => void;
@@ -60,7 +59,6 @@ export const ChatContext = createContext<ChatContextType>({
   handleLeaveRoom: async () => {},
   canSpeak: false,
   canVote: false,
-  subject: null,
   isLiar: false,
   currentUserList: [],
   handleChangeUserMemo: () => {},
@@ -83,7 +81,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [canSpeak, setCanSpeak] = useState(false);
   const [canVote, setCanVote] = useState(false);
   const [canKill, setCanKill] = useState(false);
-  const [subject, setSubject] = useState<string | null>(null);
   const [isLiar, setIsLiar] = useState<boolean>(false);
   const [background, setBackground] =
     useState<ChatContextType['background']>(null);
@@ -100,7 +97,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setCanKill(false);
     setBackground(null);
     setIsLiar(false);
-    setSubject(null);
     setGameInfo(null);
     setRoomInfo(null);
     setCurrentUserList((prevUser) =>
@@ -182,7 +178,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             setCanSpeak(message.speak);
           } else if (message.type === ROLE) {
             setIsLiar(message.role === 'wolf');
-            setSubject(message.word);
           } else if (message.type === PROCESS) {
             setVotedId(null);
             if (message.state === 'start') {
@@ -329,7 +324,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       handleChangeUserMemo,
       canSpeak,
       canVote,
-      subject,
       isLiar,
       currentUserList,
       votedId,
@@ -345,7 +339,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       canSpeak,
       canVote,
       canKill,
-      subject,
       isLiar,
       currentUserList,
       handleVote,

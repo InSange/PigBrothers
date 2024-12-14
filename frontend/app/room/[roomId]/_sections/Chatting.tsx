@@ -13,9 +13,11 @@ import MyChat from './MyChat';
 import OtherUserChat from './OtherUserChat';
 
 const Chatting = () => {
-  const { messages, subject } = useContext(ChatContext);
+  const { messages, gameInfo } = useContext(ChatContext);
   const { userId: myId } = useContext(GlobalContext);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isMeLiar = gameInfo?.wolf === myId;
+  const subject = isMeLiar ? gameInfo?.wolfSubject : gameInfo?.pigSubject;
 
   // 새로운 메시지가 추가되면 스크롤을 최신 메시지로 이동
   useEffect(() => {
