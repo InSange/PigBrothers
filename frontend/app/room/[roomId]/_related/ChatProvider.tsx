@@ -128,6 +128,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         `wss://wam-coin.store/ws/room/${roomId}/${userId}/${roomName}`
       );
 
+      const isGameStarted = roomInfo?.RoomState;
+      if (!isGameStarted) {
+        setCanSpeak(true);
+      }
+
       wsRef.current.onopen = () => {
         console.log('WebSocket connection established');
         setIsConnecting(false);

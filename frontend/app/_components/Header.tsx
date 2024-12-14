@@ -1,4 +1,3 @@
-import { useParams } from 'next/navigation';
 import { useContext, useEffect, useState } from 'react';
 import { HeaderStyled, LogoImage } from '../(root)/_related/root.styled';
 import { HeaderLogoTitle } from '../home/_related/home.styled';
@@ -9,7 +8,6 @@ type Props = {
   onClick?: () => void;
 };
 const PigHeader = ({ onClick }: Props) => {
-  const { roomId } = useParams<{ roomId: string }>();
   const { background, gameInfo, roomInfo } = useContext(ChatContext);
   const [timer, setTimer] = useState(0);
 
