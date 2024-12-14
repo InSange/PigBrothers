@@ -425,12 +425,8 @@ class Game:
     async def end_game(self):
         self.running = False
 
-        await self.room.broadcast(Process(
-            type = "process",
-            state = "end",
-            time = 0
-        ))
         self.process = "end"
+        '''
         # 게임이 끝난 것을 플레이어들에게 업데이트
         await self.room.broadcast(GameInfo(
             type="gameInfo",
@@ -442,6 +438,14 @@ class Game:
             wolfSubject=self.wolfSubject,
             pigSubject=self.pigSubject
         ))
+        '''
+
+        await self.room.broadcast(Process(
+            type = "process",
+            state = "end",
+            time = 0
+        ))
+    
         # 이긴 진영쪽을 알려줌
         if self.winner == "pigs":
             # who's the win?
