@@ -1,6 +1,5 @@
 'use client';
 
-import { useGetRoomStatusFirebaseRoomRoomIdGet } from '@/app/api/room/hooks/useQueryRoom';
 import { GlobalContext } from '@/app/GlobalContext';
 import {
   ALERT,
@@ -76,7 +75,7 @@ export const ChatContext = createContext<ChatContextType>({
 
 export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [messages, setMessages] = useState<ChatContextType['messages']>([]);
-  const { userId } = useContext(GlobalContext);
+  const { userId, roomName } = useContext(GlobalContext);
   const { roomId } = useParams<{ roomId: string }>();
   const router = useRouter();
   const wsRef = useRef<WebSocket | null>(null);
@@ -89,14 +88,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [background, setBackground] =
     useState<ChatContextType['background']>(null);
   const [votedId, setVotedId] = useState<string | null>(null);
-  const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
-    roomId,
-    isConnecting,
-  });
   const [currentUserList, setCurrentUserList] = useState<User[]>([]);
   const [roomInfo, setRoomInfo] = useState<RoomModel | null>(null);
   const [gameInfo, setGameInfo] = useState<GameInfoMessage | null>(null);
-  const isGameStarted = currentRoom?.RoomState;
 
   const handleClearGame = () => {
     setCanSpeak(true);
@@ -116,9 +110,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // 게임이 시작 되지 않은 상태(대기실)면, 말할 수 있음
-    if (!isGameStarted) {
-      setCanSpeak(true);
-    }
 
     if (!roomId || !userId || isConnecting || wsRef.current) return;
 
@@ -130,9 +121,11 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      console.log(roomName);
+
       wsRef.current = new WebSocket(
-        // `ws://localhost:8000/ws/room/${roomId}/${userId}`
-        `wss://wam-coin.store/ws/room/${roomId}/${userId}`
+        // `ws://localhost:8000/ws/room/${roomId}/${userId}/${roomName}`
+        `wss://wam-coin.store/ws/room/${roomId}/${userId}/${roomName}`
       );
 
       wsRef.current.onopen = () => {
@@ -239,7 +232,7 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       }
       setIsConnecting(false);
     };
-  }, [roomId, userId, isConnecting, currentRoom]);
+  }, [roomId, userId, isConnecting]);
 
   const handleChangeUserMemo: ChatContextType['handleChangeUserMemo'] = (
     userID

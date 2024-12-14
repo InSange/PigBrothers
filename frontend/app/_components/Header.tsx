@@ -1,7 +1,6 @@
 import { useParams } from 'next/navigation';
 import { useContext, useEffect, useState } from 'react';
 import { HeaderStyled, LogoImage } from '../(root)/_related/root.styled';
-import { useGetRoomStatusFirebaseRoomRoomIdGet } from '../api/room/hooks/useQueryRoom';
 import { HeaderLogoTitle } from '../home/_related/home.styled';
 import { ChatContext } from '../room/[roomId]/_related/ChatProvider';
 import Button from './Button';
@@ -11,9 +10,6 @@ type Props = {
 };
 const PigHeader = ({ onClick }: Props) => {
   const { roomId } = useParams<{ roomId: string }>();
-  const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
-    roomId,
-  });
   const { background, gameInfo, roomInfo } = useContext(ChatContext);
   const [timer, setTimer] = useState(0);
 
