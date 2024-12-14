@@ -12,7 +12,6 @@ import {
 
 export const UserComponent = ({ user }: { user: User }) => {
   const {
-    handleChangeUserMemo,
     isLiar,
     canVote,
     votedId,
@@ -36,7 +35,6 @@ export const UserComponent = ({ user }: { user: User }) => {
         <UserImage src={'/died.jpeg'} />
       ) : (
         <UserImage
-          onClick={() => handleChangeUserMemo(user.UserID)}
           src={(isLiar && isMe) || isWolf ? '/wolf.png' : '/pig.webp'}
         />
       )}
