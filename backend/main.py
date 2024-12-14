@@ -157,7 +157,7 @@ class Game:
         # notify to Players who pigs
         self.wolfSubject = "animal" # 랜덤 주제
         self.pigSubject = "pig" # 랜덤 주제
-
+        '''
         for player in self.players:
             if player == self.wolf: # 플레이어중 늑대인 사람에게 키워드 전달
                 await self.room.broadcast_to_user(player, Role(
@@ -175,6 +175,7 @@ class Game:
                     role = "pig",
                     word = self.pigSubject
                 ))
+                '''
 
     async def start_chat_round(self): # 채팅 프로세스 시작 함수
         # random 랜덤으로 시작 순서 설정
