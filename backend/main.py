@@ -654,12 +654,12 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str, room_
             if is_creator: # 방에 누가 입장했는지 알림창을 전달함.
                 await room.broadcast( Alert(
                                             type="alert",
-                                            text=f"{user_info.Name} created and joined the room '{room_id}'.",  # 전송할 텍스트 내용
+                                            text=f"{user_info.Name} created and joined the room '{room_data["Name"]}'.",  # 전송할 텍스트 내용
                                         ))
             else:
                 await room.broadcast( Alert(
                                             type="alert",
-                                            text=f"{user_info.Name} joined the room '{room_id}'.",  # 전송할 텍스트 내용
+                                            text=f"{user_info.Name} joined the room '{room_data["Name"]}'.",  # 전송할 텍스트 내용
                                         ))
 
         # 메시지 처리 루프
