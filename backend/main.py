@@ -566,7 +566,7 @@ room_manager = RoomManager() # 싱글톤으로 처리한 룸 매니저 인스턴
 # FastAPI를 사용하여 웹소켓 경로를 정의한 부분으로 웹소켓은 양방향 통신을 가능하게 하는 프로토콜임.
 # 클라이언트와 서버가 실시간으로 데이터를 주고 받을 수 있게 해줌
 @app.websocket("/ws/room/{room_id}/{user_id}") # 경로 설정 및 매개 변수들
-async def websocket_room(websocket: WebSocket, room_id: str, user_id: str): # 웹소켓 요청을 처리하는 함수
+async def websocket_room(websocket: WebSocket, room_id: str, user_id: str, room_name: str = None): # 웹소켓 요청을 처리하는 함수
     room_ref = firestore_client.collection("Room").document(room_id) # 파이어베이스에서 room_id에 해당하는 방에 대한 정보를 가져옴
     user_doc = firestore_client.collection("User").document(user_id).get() # 파이어베이스에서 user_id에 해당하는 유저 정보를 가져옴
 
@@ -589,10 +589,13 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str): # �
         # 방이 존재하는지 확인하고 방 생성 또는 참가 결정
         room_data = room_ref.get().to_dict()
         if not room_data:
+            if not room_name:
+                await websocket.close(code=4001, reason="room name is empty")
+                return
             # 방이 존재하지 않으면 생성
             room_data = {
                 "MaxUser": 8,
-                "Name": f"Room_{room_id}",
+                "Name": room_name,
                 "RoomID": room_id,
                 "RoomState": False,
                 "RoomHostID": user_id,
@@ -709,6 +712,11 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
             message = Chat.model_validate_json(data) # json 문자열을 디코딩해 Chat 타입으로 변경
 
             if message.type == "chat": # 메시지 타입이 채팅일 경우
+                if room.in_game:
+                    curGame = game_manager.get_game(room.room_id)
+                    if curGame.current_player != user_id:
+                        continue
+                    
                 await room.broadcast(message) # 방에 존재하는 모든 플레이어에게 채팅을 전송
 
             elif message.type == "leave": # 메시지 타입이 방을 나가는 신호일 경우
