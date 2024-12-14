@@ -565,7 +565,7 @@ room_manager = RoomManager() # 싱글톤으로 처리한 룸 매니저 인스턴
 
 # FastAPI를 사용하여 웹소켓 경로를 정의한 부분으로 웹소켓은 양방향 통신을 가능하게 하는 프로토콜임.
 # 클라이언트와 서버가 실시간으로 데이터를 주고 받을 수 있게 해줌
-@app.websocket("/ws/room/{room_id}/{user_id}") # 경로 설정 및 매개 변수들
+@app.websocket("/ws/room/{room_id}/{user_id}/{room_name}") # 경로 설정 및 매개 변수들
 async def websocket_room(websocket: WebSocket, room_id: str, user_id: str, room_name: str = None): # 웹소켓 요청을 처리하는 함수
     room_ref = firestore_client.collection("Room").document(room_id) # 파이어베이스에서 room_id에 해당하는 방에 대한 정보를 가져옴
     user_doc = firestore_client.collection("User").document(user_id).get() # 파이어베이스에서 user_id에 해당하는 유저 정보를 가져옴
@@ -716,7 +716,7 @@ async def handle_room_while(websocket: WebSocket, room: ConnectionManager,room_i
                     curGame = game_manager.get_game(room.room_id)
                     if curGame.current_player != user_id:
                         continue
-                    
+
                 await room.broadcast(message) # 방에 존재하는 모든 플레이어에게 채팅을 전송
 
             elif message.type == "leave": # 메시지 타입이 방을 나가는 신호일 경우
