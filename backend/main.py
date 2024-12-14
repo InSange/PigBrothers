@@ -1,8 +1,9 @@
 import asyncio  # 비동기 작업을 지원하기 위한 asyncio 모듈을 가져옵니다.
+import json  # JSON 데이터를 처리하기 위한 json 모듈을 가져옵니다.
 import random  # 난수를 생성하기 위한 random 모듈을 가져옵니다.
 import sys  # 시스템 관련 기능을 사용하기 위한 sys 모듈을 가져옵니다.
-import json  # JSON 데이터를 처리하기 위한 json 모듈을 가져옵니다.
-from collections import defaultdict  # 기본값이 설정된 딕셔너리를 생성하기 위한 defaultdict를 가져옵니다.
+from collections import \
+    defaultdict  # 기본값이 설정된 딕셔너리를 생성하기 위한 defaultdict를 가져옵니다.
 from datetime import datetime  # 날짜와 시간을 처리하기 위한 datetime 모듈을 가져옵니다.
 from typing import Union  # 여러 데이터 타입을 허용하기 위한 Union 타입 힌트를 가져옵니다.
 
@@ -10,7 +11,6 @@ from typing import Union  # 여러 데이터 타입을 허용하기 위한 Union
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 # CORS 미들웨어를 설정하기 위한 FastAPI의 CORSMiddleware 모듈
 from fastapi.middleware.cors import CORSMiddleware
-
 # Firebase와 관련된 클라이언트 설정을 가져옵니다.
 from firebase_config import firestore_client, realtime_db
 # 사용자 정의 데이터 모델을 가져옵니다.
@@ -570,6 +570,7 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str, room_
     room_ref = firestore_client.collection("Room").document(room_id) # 파이어베이스에서 room_id에 해당하는 방에 대한 정보를 가져옴
     user_doc = firestore_client.collection("User").document(user_id).get() # 파이어베이스에서 user_id에 해당하는 유저 정보를 가져옴
 
+    print('573', room_ref, room_id)
     if not user_doc.exists: # 유저 정보가 없다면 예외 처리
         raise HTTPException(status_code=404, detail="User info not found")
     # 유저 데이터를 딕셔너리 형식으로 변환
@@ -586,9 +587,13 @@ async def websocket_room(websocket: WebSocket, room_id: str, user_id: str, room_
     await websocket.accept()
 
     try:
+        print('room_ref.get()', room_ref.get())
+        print('room_ref.get().to_dict()', room_ref.get().to_dict())
         # 방이 존재하는지 확인하고 방 생성 또는 참가 결정
         room_data = room_ref.get().to_dict()
+        print('room_data', room_data)
         if not room_data:
+            print('room_name', room_name)
             if not room_name:
                 await websocket.close(code=4001, reason="room name is empty")
                 return
