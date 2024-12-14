@@ -1,5 +1,5 @@
-import { useGetRoomStatusFirebaseRoomRoomIdGet } from '@/app/api/room/hooks/useQueryRoom';
-import { useParams } from 'next/navigation';
+import { useContext } from 'react';
+import { ChatContext } from '../_related/ChatProvider';
 import {
   ChatContent,
   ChatImage,
@@ -10,12 +10,9 @@ import {
 import { ChatMessage } from '../_related/type';
 
 const MyChat = ({ message }: { message: ChatMessage }) => {
-  const { roomId } = useParams<{ roomId: string }>();
-  const { data: currentRoom } = useGetRoomStatusFirebaseRoomRoomIdGet({
-    roomId,
-  });
+  const { roomInfo } = useContext(ChatContext);
 
-  const user = currentRoom?.UserList?.find(
+  const user = roomInfo?.UserList?.find(
     (user) => user.UserID === message.userID
   );
 
