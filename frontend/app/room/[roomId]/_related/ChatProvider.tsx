@@ -8,12 +8,11 @@ import {
   KILL,
   LEAVE,
   PROCESS,
-  ROLE,
   ROOM_INFO,
   STATE,
   VOTE,
 } from '@/constant';
-import { RoomModel, UserModel } from '@/types/Api';
+import { RoomModel } from '@/types/Api';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import {
@@ -37,7 +36,6 @@ interface ChatContextType {
   handleLeaveRoom: () => Promise<void>;
   canSpeak: boolean;
   canVote: boolean;
-  isLiar: boolean;
   handleVote: (userID: string) => void;
   handleKill: (userID: string) => void;
   votedId: string | null;
@@ -47,17 +45,12 @@ interface ChatContextType {
   gameInfo: GameInfoMessage | null;
 }
 
-export interface User extends UserModel {
-  memo: 'wolf' | 'pig';
-}
-
 export const ChatContext = createContext<ChatContextType>({
   messages: [],
   sendMessage: () => {},
   handleLeaveRoom: async () => {},
   canSpeak: false,
   canVote: false,
-  isLiar: false,
   votedId: null,
   handleVote: () => {},
   handleKill: () => {},
@@ -77,7 +70,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [canSpeak, setCanSpeak] = useState(false);
   const [canVote, setCanVote] = useState(false);
   const [canKill, setCanKill] = useState(false);
-  const [isLiar, setIsLiar] = useState<boolean>(false);
   const [background, setBackground] =
     useState<ChatContextType['background']>(null);
   const [votedId, setVotedId] = useState<string | null>(null);
@@ -91,7 +83,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setCanVote(false);
     setCanKill(false);
     setBackground(null);
-    setIsLiar(false);
     setGameInfo(null);
     setRoomInfo(null);
   };
@@ -149,8 +140,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
             setGameInfo(message);
           } else if (message.type === STATE) {
             setCanSpeak(message.speak);
-          } else if (message.type === ROLE) {
-            setIsLiar(message.role === 'wolf');
           } else if (message.type === PROCESS) {
             setVotedId(null);
             if (message.state === 'start') {
@@ -184,7 +173,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
                 time: message.time,
                 type: 'process',
               });
-              isLiar && setCanKill(true);
+              setCanVote(false);
+              setCanKill(gameInfo?.wolf === userId);
             }
             if (message.state === 'end') {
               handleClearGame();
@@ -284,7 +274,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       handleLeaveRoom,
       canSpeak,
       canVote,
-      isLiar,
       votedId,
       canKill,
       handleVote,
@@ -298,7 +287,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       canSpeak,
       canVote,
       canKill,
-      isLiar,
       handleVote,
       handleKill,
       background,

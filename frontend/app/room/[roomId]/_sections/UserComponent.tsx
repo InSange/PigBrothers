@@ -1,8 +1,9 @@
 'use client';
 import { AlignCenterRowStack } from '@/app/_components/common';
 import { GlobalContext } from '@/app/GlobalContext';
+import { UserModel } from '@/types/Api';
 import { useContext } from 'react';
-import { ChatContext, User } from '../_related/ChatProvider';
+import { ChatContext } from '../_related/ChatProvider';
 import {
   UserCard,
   UserImage,
@@ -10,9 +11,8 @@ import {
   VoteImage,
 } from '../_related/session.styled';
 
-export const UserComponent = ({ user }: { user: User }) => {
+export const UserComponent = ({ user }: { user: UserModel }) => {
   const {
-    isLiar,
     canVote,
     votedId,
     canKill,
@@ -22,21 +22,19 @@ export const UserComponent = ({ user }: { user: User }) => {
     gameInfo,
   } = useContext(ChatContext);
   const { userId: myId } = useContext(GlobalContext);
-  const { Name, UserID, memo } = user ?? {};
-  const isWolf = memo === 'wolf';
+  const { Name, UserID } = user ?? {};
   const isMe = UserID === myId;
   const isUserSelected = votedId === UserID;
   const isDied = gameInfo?.dead_player.includes(UserID);
   const isMeDied = gameInfo?.dead_player.includes(myId!);
+  const isLiar = gameInfo?.wolf === UserID;
 
   return (
     <UserCard>
       {isDied ? (
         <UserImage src={'/died.jpeg'} />
       ) : (
-        <UserImage
-          src={(isLiar && isMe) || isWolf ? '/wolf.png' : '/pig.webp'}
-        />
+        <UserImage src={isLiar && isMe ? '/wolf.png' : '/pig.webp'} />
       )}
       <AlignCenterRowStack style={{ gap: '4px' }}>
         <UserName>
