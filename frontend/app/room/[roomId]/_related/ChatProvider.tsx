@@ -35,11 +35,9 @@ interface ChatContextType {
   }) => void;
   handleLeaveRoom: () => Promise<void>;
   canSpeak: boolean;
-  canVote: boolean;
   handleVote: (userID: string) => void;
   handleKill: (userID: string) => void;
   votedId: string | null;
-  canKill: boolean;
   background: ProcessMessage;
   roomInfo: RoomModel | null;
   gameInfo: GameInfoMessage | null;
@@ -50,11 +48,9 @@ export const ChatContext = createContext<ChatContextType>({
   sendMessage: () => {},
   handleLeaveRoom: async () => {},
   canSpeak: false,
-  canVote: false,
   votedId: null,
   handleVote: () => {},
   handleKill: () => {},
-  canKill: false,
   background: null,
   roomInfo: null,
   gameInfo: null,
@@ -68,8 +64,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const wsRef = useRef<WebSocket | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
   const [canSpeak, setCanSpeak] = useState(false);
-  const [canVote, setCanVote] = useState(false);
-  const [canKill, setCanKill] = useState(false);
   const [background, setBackground] =
     useState<ChatContextType['background']>(null);
   const [votedId, setVotedId] = useState<string | null>(null);
@@ -80,16 +74,12 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setCanSpeak(true);
     setMessages([]);
     setVotedId(null);
-    setCanVote(false);
-    setCanKill(false);
     setBackground(null);
     setGameInfo(null);
     setRoomInfo(null);
   };
 
   useEffect(() => {
-    // 게임이 시작 되지 않은 상태(대기실)면, 말할 수 있음
-
     if (!roomId || !userId || isConnecting || wsRef.current) return;
 
     const connectWebSocket = () => {
@@ -159,13 +149,18 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
               setCanSpeak(false);
             }
             if (message.state === 'vote') {
+              console.log({
+                vote: 'vote',
+                gameInfo,
+                gameInfoWolf: gameInfo?.wolf,
+                userId,
+              });
               setBackground({
                 state: 'vote',
                 time: message.time,
                 type: 'process',
               });
               setCanSpeak(false);
-              setCanVote(true);
             }
             if (message.state === 'night') {
               setBackground({
@@ -173,8 +168,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
                 time: message.time,
                 type: 'process',
               });
-              setCanVote(false);
-              setCanKill(gameInfo?.wolf === userId);
             }
             if (message.state === 'end') {
               handleClearGame();
@@ -225,7 +218,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     if (wsRef.current) {
       wsRef.current.send(JSON.stringify({ userID, type: VOTE, text: '' }));
     }
-    setCanVote(false);
   };
 
   const handleKill = (userID: string) => {
@@ -233,7 +225,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     if (wsRef.current) {
       wsRef.current.send(JSON.stringify({ userID, type: KILL, text: '' }));
     }
-    setCanKill(false);
   };
 
   const sendMessage: ChatContextType['sendMessage'] = ({
@@ -273,26 +264,14 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       sendMessage,
       handleLeaveRoom,
       canSpeak,
-      canVote,
       votedId,
-      canKill,
       handleVote,
       handleKill,
       background,
       roomInfo,
       gameInfo,
     }),
-    [
-      messages,
-      canSpeak,
-      canVote,
-      canKill,
-      handleVote,
-      handleKill,
-      background,
-      roomInfo,
-      gameInfo,
-    ]
+    [messages, canSpeak, handleVote, handleKill, background, roomInfo, gameInfo]
   );
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
