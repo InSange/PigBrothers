@@ -1,7 +1,8 @@
 'use client';
 import { AlignCenterRowStack } from '@/app/_components/common';
+import { UserModel } from '@/types/Api';
 import { useContext } from 'react';
-import { ChatContext, User } from '../_related/ChatProvider';
+import { ChatContext } from '../_related/ChatProvider';
 import { RoomTitle, UserCard, UserImage } from '../_related/session.styled';
 import { UserComponent } from './UserComponent';
 
@@ -12,7 +13,7 @@ const Users = () => {
   const currentUserList = roomInfo?.UserList ?? [];
 
   const remainingSlots = MAX_USERS - currentUserList.length;
-  const allSlots: User[] = [
+  const allSlots: UserModel[] = [
     ...currentUserList,
     ...Array(remainingSlots).fill(null),
   ];

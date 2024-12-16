@@ -37,7 +37,7 @@ const Page = () => {
 
       const timer = setTimeout(() => {
         setIsModalOpen(false);
-      }, 3000);
+      }, 7000);
 
       return () => clearTimeout(timer);
     }
