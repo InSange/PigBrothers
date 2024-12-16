@@ -154,9 +154,22 @@ class Game:
         ))
 
     async def assign_roles(self): # 각자 역할에 맞는 주제 설정
+        collection_ref = firestore_client.collection("Topic")
+        docs = collection_ref.stream()
+        doc_list = [doc for doc in docs]
+
+        print(doc_list)
+
+        if not doc_list:
+            self.wolfSubject = "animal" # 랜덤 주제
+            self.pigSubject = "pig" # 랜덤 주제
+        
+        random_doc = random.choice(doc_list)
+
+        doc_data = random_doc.to_dict()
         # notify to Players who pigs
-        self.wolfSubject = "animal" # 랜덤 주제
-        self.pigSubject = "pig" # 랜덤 주제
+        self.wolfSubject = doc_data.get("key") # 랜덤 주제
+        self.pigSubject = doc_data.get("value") # 랜덤 주제
         '''
         for player in self.players:
             if player == self.wolf: # 플레이어중 늑대인 사람에게 키워드 전달
@@ -926,7 +939,7 @@ async def start_game(room_id: str): # 게임 시작 API 함수
         if not room: # 방이 존재하지 않을 시 예외 처리
             raise HTTPException(status_code = 404, detail="Room not found")
         print("Start ROOM Room Player {}".format(len(room.active_connections)))
-        if len(room.active_connections) < 2: # 플레이어의 수가 2명 이하면 게임을 시작할 수 없는 예외 처리
+        if len(room.active_connections) <= 2: # 플레이어의 수가 2명 이하면 게임을 시작할 수 없는 예외 처리
             raise HTTPException(status_code = 400, detail="Not enough players to start the game")
 
         # Create Game Instance
