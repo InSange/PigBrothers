@@ -1,6 +1,7 @@
 import { GlobalContext } from '@/app/GlobalContext';
 import { ALERT } from '@/constant';
 import { useContext, useEffect, useRef } from 'react';
+import { useTheme } from 'styled-components';
 import { ChatContext } from '../_related/ChatProvider';
 import {
   Chats,
@@ -13,6 +14,7 @@ import MyChat from './MyChat';
 import OtherUserChat from './OtherUserChat';
 
 const Chatting = () => {
+  const theme = useTheme();
   const { messages, gameInfo } = useContext(ChatContext);
   const { userId: myId } = useContext(GlobalContext);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -29,8 +31,13 @@ const Chatting = () => {
   }
 
   return (
-    <ChattingContainer style={{ overflow: 'auto' }}>
-      <ChattingContainerTitle>
+    <ChattingContainer
+      style={{
+        overflow: 'auto',
+      }}
+      dark={gameInfo?.process === 'night'}
+    >
+      <ChattingContainerTitle dark={gameInfo?.process === 'night'}>
         채팅창 {subject ? `- ${subject}` : ''}
       </ChattingContainerTitle>
       <Chats>

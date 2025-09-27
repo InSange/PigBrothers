@@ -10,7 +10,7 @@ import {
 import { ChatMessage } from '../_related/type';
 
 const OtherUserChat = ({ message }: { message: ChatMessage }) => {
-  const { roomInfo } = useContext(ChatContext);
+  const { roomInfo, gameInfo } = useContext(ChatContext);
 
   const user = roomInfo?.UserList?.find(
     (user) => user.UserID === message.userID
@@ -20,8 +20,10 @@ const OtherUserChat = ({ message }: { message: ChatMessage }) => {
     <UserChatBubble>
       <ChatImage src={'/pig.webp'} />
       <ChatInfoContainer>
-        <ChatName>{user?.Name}</ChatName>
-        <ChatContent>{message.text}</ChatContent>
+        <ChatName dark={gameInfo?.process === 'night'}>{user?.Name}</ChatName>
+        <ChatContent dark={gameInfo?.process === 'night'}>
+          {message.text}
+        </ChatContent>
       </ChatInfoContainer>
     </UserChatBubble>
   );

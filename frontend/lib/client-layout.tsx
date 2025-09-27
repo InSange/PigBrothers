@@ -1,8 +1,8 @@
 'use client';
 
+import GlobalStyle from '@/app/_components/globalstyles';
 import { ReactNode } from 'react';
 import { ThemeProvider, type DefaultTheme } from 'styled-components';
-import GlobalStyle from '@/app/_components/globalstyles';
 
 const theme: DefaultTheme = {
   colors: {
@@ -14,6 +14,9 @@ const theme: DefaultTheme = {
     disabledBackground: '#F5F5F5',
     disabledText: '#BDBDBD',
     error: '#FF0000',
+    dark: '#666666',
+    chatBackground: '#fff',
+    chatLightBackground: '#fff0f0',
   },
 };
 

@@ -32,9 +32,9 @@ export const UserCard = styled.div`
   min-height: 80px;
 `;
 
-export const UserName = styled.div`
+export const UserName = styled.div<{ dark: boolean }>`
   font-size: 12px;
-  color: #000;
+  color: ${({ dark }) => (dark ? '#fff' : '#000')};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -45,6 +45,7 @@ export const VoteImage = styled.img`
   width: 16px;
   height: 16px;
   cursor: pointer;
+  color: #fff;
 `;
 
 export const UserImage = styled.img`
@@ -58,9 +59,10 @@ export const UserImage = styled.img`
   object-fit: contain;
 `;
 
-export const ChattingContainer = styled.div`
+export const ChattingContainer = styled.div<{ dark: boolean }>`
   padding: 12px;
-  background-color: #fff0f0;
+  background-color: ${({ theme, dark }) =>
+    dark ? theme.colors.chatBackground : theme.colors.chatLightBackground};
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -68,8 +70,8 @@ export const ChattingContainer = styled.div`
   height: 100%;
 `;
 
-export const ChattingContainerTitle = styled.div`
-  color: #000;
+export const ChattingContainerTitle = styled.div<{ dark: boolean }>`
+  color: ${({ dark }) => (dark ? '#fff' : '#000')};
   font-weight: bold;
 `;
 export const Chats = styled.div`
@@ -108,18 +110,18 @@ export const ChatInfoContainer = styled.div`
   display: flex;
   flex-direction: column;
 `;
-export const ChatName = styled.div`
+export const ChatName = styled.div<{ dark: boolean }>`
   font-weight: bold;
   font-size: 14px;
-  color: #000;
+  color: ${({ dark }) => (dark ? '#fff' : '#000')};
 `;
 export const ChatImage = styled.img`
   width: 24px;
   height: 24px;
   border-radius: 99999999px;
 `;
-export const ChatContent = styled.div`
+export const ChatContent = styled.div<{ dark: boolean }>`
   font-size: 14px;
-  color: #000;
+  color: ${({ dark }) => (dark ? '#fff' : '#000')};
   word-break: break-all;
 `;

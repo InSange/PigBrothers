@@ -11,6 +11,9 @@ declare module 'styled-components' {
       disabledText: string;
       error: string;
       gray: string;
+      dark: string;
+      chatBackground: string;
+      chatLightBackground: string;
     };
   }
 }

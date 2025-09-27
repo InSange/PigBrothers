@@ -93,8 +93,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       console.log(roomName);
 
       wsRef.current = new WebSocket(
-        // `ws://localhost:8000/ws/room/${roomId}/${userId}/${roomName}`
-        `wss://wam-coin.store/ws/room/${roomId}/${userId}/${roomName}`
+        `ws://127.0.0.1:8000/ws/room/${roomId}/${userId}/${roomName}`
+        // `wss://wam-coin.store/ws/room/${roomId}/${userId}/${roomName}`
       );
 
       const isGameStarted = roomInfo?.RoomState;

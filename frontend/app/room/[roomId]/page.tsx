@@ -8,6 +8,7 @@ import { GlobalContext } from '@/app/GlobalContext';
 import { useParams, useRouter } from 'next/navigation';
 import { enqueueSnackbar } from 'notistack';
 import { useContext, useEffect, useState } from 'react';
+import { useTheme } from 'styled-components';
 import { ChatContext } from './_related/ChatProvider';
 import { SessionContentContainer } from './_related/session.styled';
 import Chatting from './_sections/Chatting';
@@ -17,6 +18,7 @@ import Users from './_sections/Users';
 const Page = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const { userId } = useContext(GlobalContext);
+  const theme = useTheme();
   const { handleLeaveRoom, roomInfo, gameInfo } = useContext(ChatContext);
   const router = useRouter();
   const { mutateAsync: startGame } = useStartGameFirebaseRoomRoomIdStartPut();
@@ -60,7 +62,17 @@ const Page = () => {
   };
 
   return (
-    <Layout style={{ height: '100vh', padding: '0px 0px 48px 0px' }}>
+    <Layout
+      style={{
+        height: '100vh',
+        padding: '0px 0px 48px 0px',
+        backgroundColor:
+          gameInfo?.process === 'night'
+            ? theme.colors.dark
+            : theme.colors.secondary,
+      }}
+      dark={gameInfo?.process === 'night'}
+    >
       <PigHeader onClick={handleGotoBack} />
       <SessionContentContainer>
         <Users />

@@ -4,8 +4,8 @@ import { Api } from './Api';
 
 type CustomHeader = { Authorization: string | undefined | null };
 export const apiClient = new Api<CustomHeader>({
-  baseURL: 'https://wam-coin.store/',
-  // baseURL: 'http://localhost:8000/',
+  // baseURL: 'https://wam-coin.store/',
+  baseURL: 'http://127.0.0.1:8000/',
 });
 
 apiClient.instance.interceptors.request.use(async (config) => {

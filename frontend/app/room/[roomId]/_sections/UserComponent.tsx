@@ -46,7 +46,7 @@ export const UserComponent = ({ user }: { user: UserModel }) => {
         <UserImage src={isLiar && isMe ? '/wolf.png' : '/pig.webp'} />
       )}
       <AlignCenterRowStack style={{ gap: '4px' }}>
-        <UserName>
+        <UserName dark={gameInfo?.process === 'night'}>
           {roomInfo?.RoomHostID === user.UserID ? `👑 ${Name}` : Name}
         </UserName>
         {canVote && (

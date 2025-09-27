@@ -4,7 +4,7 @@ export const LogoImage = styled.img`
   border-radius: 99999999px;
 `;
 
-export const Layout = styled.div`
+export const Layout = styled.div<{ dark?: boolean }>`
   max-width: 600px;
   min-height: 100vh;
   height: 100%;
@@ -12,7 +12,8 @@ export const Layout = styled.div`
   display: flex;
   flex-direction: column;
   padding: 0px 0px 16px 0px;
-  background-color: ${({ theme }) => theme.colors.secondary};
+  background-color: ${({ theme, dark }) =>
+    dark ? theme.colors.dark : theme.colors.secondary};
 `;
 
 export const LogoTitle = styled.div`
